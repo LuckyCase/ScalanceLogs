@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scalance Log Viewer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&family=Barlow:wght@400;600;700&display=swap');
+
+  :root {
+    --bg:        #10121a;
+    --surface:   #161b26;
+    --border:    #222840;
+    --accent:    #4fa8c5;
+    --accent2:   #2d6a82;
+    --green:     #4a9e72;
+    --red:       #b85555;
+    --yellow:    #b8913a;
+    --muted:     #3d4a60;
+    --text:      #a8b4cc;
+    --text-dim:  #556070;
+    --mono:      'Roboto Mono', monospace;
+    --sans:      'Barlow', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 28px; height: 28px;
+    border: 2px solid var(--accent);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+    padding: 4px;
+  }
+
+  .logo-icon span {
+    background: var(--accent);
+    display: block;
+  }
+
+  .logo-icon span:nth-child(3) { background: var(--accent2); }
+
+  .header-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.5px;
+  }
+
+  .header-sub {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+
+  .spacer { flex: 1; }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+    transition: background 0.4s;
+  }
+
+  .status-dot.ok   { background: var(--green); }
+  .status-dot.warn { background: var(--yellow); }
+
+  .status-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    transition: color 0.4s;
+  }
+
+  .status-label.warn { color: var(--yellow); }
+
+  /* ── Layout ── */
+  .layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  aside {
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .sidebar-label {
+    padding: 14px 16px 8px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .file-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .file-item {
+    padding: 9px 16px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-dim);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-left: 2px solid transparent;
+  }
+
+  .file-item:hover { color: var(--text); background: rgba(0,200,255,0.04); }
+
+  .file-item.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(0,200,255,0.07);
+  }
+
+  .file-icon {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .file-item.active .file-icon { background: var(--accent); }
+  .file-item[data-events="true"] .file-icon { background: var(--yellow); }
+
+  /* ── Main ── */
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 10px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 7px 12px 7px 32px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input[type="text"]:focus { border-color: var(--accent); }
+  input[type="text"]::placeholder { color: var(--muted); }
+
+  select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 7px 10px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  select:focus { border-color: var(--accent); }
+
+  .btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 7px 14px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-auto {
+    border-color: var(--accent2);
+    color: var(--accent);
+  }
+
+  .btn-auto.active {
+    background: rgba(0,200,255,0.1);
+    border-color: var(--accent);
+    box-shadow: none;
+  }
+
+  /* ── Stats bar ── */
+  .stats {
+    padding: 6px 20px;
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .stat {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .stat-val { color: var(--accent); font-weight: 600; }
+  .stat-err { color: var(--red); }
+  .stat-warn { color: var(--yellow); }
+  .stat-ok { color: var(--green); }
+
+  /* ── Log area ── */
+  .log-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+    scroll-behavior: smooth;
+  }
+
+  .log-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 14px;
+    letter-spacing: 0.5px;
+  }
+
+  .log-line {
+    display: flex;
+    align-items: baseline;
+    gap: 0;
+    padding: 3px 20px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.65;
+    border-left: 2px solid transparent;
+    transition: background 0.1s;
+  }
+
+  .log-line:hover { background: rgba(255,255,255,0.03); }
+
+  .log-line.sev-error, .log-line.sev-crit, .log-line.sev-emerg, .log-line.sev-alert {
+    border-left-color: var(--red);
+    background: rgba(255,61,61,0.05);
+  }
+
+  .log-line.sev-warn {
+    border-left-color: var(--yellow);
+    background: rgba(255,215,64,0.04);
+  }
+
+  .log-line.sev-info, .log-line.sev-notice, .log-line.sev-debug {
+    border-left-color: transparent;
+  }
+
+  /* highlight link up/down */
+  .log-line.ev-down { border-left-color: var(--red) !important; }
+  .log-line.ev-up   { border-left-color: var(--green) !important; }
+
+  .col-ts   { color: var(--text-dim); min-width: 168px; flex-shrink: 0; }
+  .col-sev  { min-width: 64px; flex-shrink: 0; font-size: 12px; letter-spacing: 0; }
+  .col-host { min-width: 210px; flex-shrink: 0; color: var(--accent); }
+  .col-msg  { color: var(--text); flex: 1; }
+
+  .sev-chip {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    border-radius: 2px;
+  }
+
+  .chip-error, .chip-crit, .chip-emerg, .chip-alert {
+    background: rgba(255,61,61,0.2);
+    color: var(--red);
+  }
+  .chip-warn { background: rgba(255,215,64,0.15); color: var(--yellow); }
+  .chip-info, .chip-notice { background: rgba(0,200,255,0.1); color: var(--accent); }
+  .chip-debug { background: rgba(100,100,100,0.15); color: var(--muted); }
+
+  .kw-down { color: var(--red); font-weight: 600; }
+  .kw-up   { color: var(--green); font-weight: 600; }
+  .kw-fault, .kw-error, .kw-fail { color: var(--yellow); }
+
+  /* ── Live panel ── */
+  .live-panel {
+    width: 290px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .live-header {
+    padding: 10px 14px 9px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .live-badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(79,168,197,0.12);
+    padding: 1px 8px;
+    border-radius: 10px;
+    min-width: 24px;
+    text-align: center;
+  }
+
+  .live-feed {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 0;
+  }
+
+  .live-line {
+    padding: 5px 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.4;
+    border-left: 2px solid transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transition: background-color 0s;
+  }
+
+  .live-line.sev-error,
+  .live-line.sev-crit,
+  .live-line.sev-emerg,
+  .live-line.sev-alert  { border-left-color: var(--red); }
+  .live-line.sev-warn   { border-left-color: var(--yellow); }
+  .live-line.ev-down    { border-left-color: var(--red)   !important; }
+  .live-line.ev-up      { border-left-color: var(--green) !important; }
+
+  .live-time { font-size: 11px; color: var(--text-dim); }
+
+  .live-body {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    overflow: hidden;
+  }
+
+  .live-msg {
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+  }
+
+  .live-empty {
+    padding: 20px 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  /* ── Footer ── */
+  footer {
+    height: 28px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .footer-text {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Sidebar toggle (hidden on wide screens) ── */
+  .sidebar-toggle { display: none; }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 199;
+    background: rgba(0,0,0,0.45);
+  }
+  .sidebar-overlay.visible { display: block; }
+
+  /* ── 1200px: hide live panel ── */
+  @media (max-width: 1200px) {
+    .live-panel { display: none; }
+  }
+
+  /* ── 860px: sidebar becomes drawer, col-host hidden ── */
+  @media (max-width: 860px) {
+    .sidebar-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px 12px;
+      font-size: 15px;
+    }
+
+    aside {
+      position: fixed;
+      top: 56px;
+      left: 0;
+      bottom: 28px;
+      z-index: 200;
+      transform: translateX(-100%);
+      transition: transform 0.22s ease;
+    }
+
+    aside.open {
+      transform: translateX(0);
+      box-shadow: 6px 0 28px rgba(0,0,0,0.55);
+    }
+
+    .col-host { display: none; }
+    .live-line .live-time { font-size: 11px; }
+  }
+
+  /* ── Height: compact chrome ── */
+  @media (max-height: 600px) {
+    header       { height: 44px; padding: 0 20px; }
+    .logo-icon   { width: 22px; height: 22px; }
+    .header-title{ font-size: 14px; }
+    .header-sub  { display: none; }
+
+    .toolbar     { padding: 7px 20px; }
+    .stats       { padding: 4px 20px; }
+
+    footer       { height: 22px; }
+    .log-line    { padding: 1px 20px; line-height: 1.55; }
+    .live-line   { padding: 3px 14px; }
+  }
+
+  /* ── Height: hide stats bar ── */
+  @media (max-height: 460px) {
+    .stats       { display: none; }
+    .sidebar-label { padding: 8px 16px 6px; }
+  }
+
+  /* ── 580px: wrap toolbar and stats ── */
+  @media (max-width: 580px) {
+    header { gap: 10px; padding: 0 14px; }
+    .header-sub { display: none; }
+    .logo span { display: none; }
+
+    .toolbar { flex-wrap: wrap; gap: 8px; }
+    .search-wrap { max-width: none; width: 100%; order: -1; }
+
+    .stats { flex-wrap: wrap; gap: 8px 16px; height: auto; padding: 8px 16px; }
+
+    .log-line { font-size: 12px; padding: 2px 12px; }
+    .col-ts   { min-width: 130px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    SCALANCE
+  </div>
+  <div>
+    <div class="header-title">Syslog Viewer</div>
+    <div class="header-sub">Profinet Network Monitor</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="status-dot" id="statusDot"></div>
+  <div class="status-label" id="statusLabel">connecting...</div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="layout">
+  <aside id="sidebar">
+    <div class="sidebar-label">Log Files</div>
+    <div class="file-list" id="fileList">
+      <div class="log-empty" style="height:80px;font-size:13px;">loading...</div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="toolbar">
+      <button class="btn sidebar-toggle" onclick="toggleSidebar()">☰</button>
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="searchInput" placeholder="Search...">
+      </div>
+      <select id="lineCount">
+        <option value="50">50 lines</option>
+        <option value="100">100 lines</option>
+        <option value="200" selected>200 lines</option>
+        <option value="500">500 lines</option>
+        <option value="1000">1000 lines</option>
+      </select>
+      <button class="btn" onclick="loadLog()">↻ Refresh</button>
+      <button class="btn btn-auto" id="autoBtn" onclick="toggleAuto()">⏱ Auto</button>
+    </div>
+
+    <div class="stats" id="statsBar">
+      <span class="stat">Lines: <span class="stat-val" id="statTotal">—</span></span>
+      <span class="stat">Errors: <span class="stat-val stat-err" id="statErr">—</span></span>
+      <span class="stat">Warnings: <span class="stat-val stat-warn" id="statWarn">—</span></span>
+      <span class="stat">Link Down: <span class="stat-val stat-err" id="statDown">—</span></span>
+      <span class="stat">Link Up: <span class="stat-val stat-ok" id="statUp">—</span></span>
+    </div>
+
+    <div class="log-wrap" id="logWrap">
+      <div class="log-empty">Select a log file</div>
+    </div>
+  </main>
+
+  <div class="live-panel">
+    <div class="live-header">
+      <span>Live Events</span>
+      <span class="live-badge" id="liveBadge">0</span>
+    </div>
+    <div class="live-feed" id="liveFeed">
+      <div class="live-empty">Waiting for events...</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span class="footer-text">Scalance Syslog Collector</span>
+  <span class="footer-text" id="footerFile">—</span>
+  <div class="spacer"></div>
+  <span class="footer-text">IVTI</span>
+</footer>
+
+<script>
+const API = '';
+let currentFile   = 'events.log';
+let autoRefresh   = false;
+let autoTimer     = null;
+const INTERVAL    = 5000;
+let lastOkTime    = null;
+let statusTicker  = null;
+
+function updateStatus() {
+  lastOkTime = Date.now();
+  tickStatus();
+  if (!statusTicker) statusTicker = setInterval(tickStatus, 1000);
+}
+
+function tickStatus() {
+  if (!lastOkTime) return;
+  const dot   = document.getElementById('statusDot');
+  const label = document.getElementById('statusLabel');
+  const sec   = Math.floor((Date.now() - lastOkTime) / 1000);
+  const text  = sec < 60 ? `Updated ${sec}s ago` : `Updated ${Math.floor(sec / 60)}m ago`;
+  const stale = sec >= 15;
+  dot.className   = `status-dot ${stale ? 'warn' : 'ok'}`;
+  label.className = `status-label${stale ? ' warn' : ''}`;
+  label.textContent = text;
+}
+
+// ── Load file list ─────────────────────────────────────────
+async function loadFiles() {
+  try {
+    const r = await fetch(`${API}/api/files`);
+    const files = await r.json();
+    const el = document.getElementById('fileList');
+    if (!files.length) {
+      el.innerHTML = '<div class="log-empty" style="height:80px;font-size:13px;">no files</div>';
+      return;
+    }
+    el.innerHTML = files.map(f => `
+      <div class="file-item ${f === currentFile ? 'active' : ''}"
+           data-events="${f === 'events.log'}"
+           onclick="selectFile('${f}')">
+        <span class="file-icon"></span>${f}
+      </div>`).join('');
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function selectFile(f) {
+  currentFile = f;
+  document.getElementById('footerFile').textContent = f;
+  closeSidebar();
+  loadFiles();
+  loadLog();
+}
+
+// ── Load log ───────────────────────────────────────────────
+async function loadLog() {
+  const search = document.getElementById('searchInput').value.trim();
+  const lines  = document.getElementById('lineCount').value;
+  const url    = `${API}/api/log?file=${encodeURIComponent(currentFile)}&lines=${lines}&search=${encodeURIComponent(search)}`;
+
+  try {
+    const r    = await fetch(url);
+    const data = await r.json();
+    renderLog(data);
+  } catch(e) {
+    document.getElementById('logWrap').innerHTML =
+      '<div class="log-empty">Load error. Is viewer_server.py running?</div>';
+  }
+}
+
+// ── Render lines ───────────────────────────────────────────
+function renderLog(data) {
+  const wrap = document.getElementById('logWrap');
+  const lines = data.lines || [];
+
+  if (data.error) {
+    wrap.innerHTML = `<div class="log-empty">${data.error}</div>`;
+    resetStats();
+    return;
+  }
+  if (!lines.length) {
+    wrap.innerHTML = '<div class="log-empty">No events</div>';
+    resetStats();
+    return;
+  }
+
+  let errCount=0, warnCount=0, downCount=0, upCount=0;
+  const atBottom = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 40;
+
+  wrap.innerHTML = lines.map(line => {
+    const sevMatch = line.match(/\[(EMERG|ALERT|CRIT|ERROR|WARN|NOTICE|INFO|DEBUG)\s*\]/i);
+    const sev      = sevMatch ? sevMatch[1].toLowerCase() : 'info';
+    const isDown   = /link\s+down|port.*down/i.test(line);
+    const isUp     = /link\s+up|port.*up/i.test(line);
+
+    if (['error','crit','emerg','alert'].includes(sev)) errCount++;
+    if (sev === 'warn') warnCount++;
+    if (isDown) downCount++;
+    if (isUp)   upCount++;
+
+    const colMatch = line.match(/^(\d{4}-\d{2}-\d{2}\s[\d:]+)\s+\[([^\]]+)\]\s+([^|]+)\|\s*(.*)$/);
+    let ts='', sevStr='', host='', msg=line;
+    if (colMatch) {
+      [, ts, sevStr, host, msg] = colMatch;
+      host = host.trim();
+    }
+
+    msg = msg
+      .replace(/\b(down)\b/gi, '<span class="kw-down">$1</span>')
+      .replace(/\b(up)\b/gi,   '<span class="kw-up">$1</span>')
+      .replace(/\b(fault|error|fail)\b/gi, '<span class="kw-fault">$1</span>');
+
+    const sevKey  = sevStr.trim().toLowerCase();
+    const lineClass = [
+      `sev-${sevKey}`,
+      isDown ? 'ev-down' : '',
+      isUp   ? 'ev-up'   : ''
+    ].filter(Boolean).join(' ');
+
+    return `<div class="log-line ${lineClass}">
+      <span class="col-ts">${ts}</span>
+      <span class="col-sev"><span class="sev-chip chip-${sevKey}">${sevStr.trim()}</span></span>
+      <span class="col-host">${host}</span>
+      <span class="col-msg">${msg}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('statTotal').textContent = data.total;
+  document.getElementById('statErr').textContent   = errCount;
+  document.getElementById('statWarn').textContent  = warnCount;
+  document.getElementById('statDown').textContent  = downCount;
+  document.getElementById('statUp').textContent    = upCount;
+
+  if (atBottom) wrap.scrollTop = wrap.scrollHeight;
+}
+
+function resetStats() {
+  ['statTotal','statErr','statWarn','statDown','statUp']
+    .forEach(id => document.getElementById(id).textContent = '0');
+}
+
+// ── Auto-refresh ───────────────────────────────────────────
+function toggleAuto() {
+  autoRefresh = !autoRefresh;
+  const btn = document.getElementById('autoBtn');
+  btn.classList.toggle('active', autoRefresh);
+  if (autoRefresh) {
+    autoTimer = setInterval(loadLog, INTERVAL);
+  } else {
+    clearInterval(autoTimer);
+  }
+}
+
+// ── Search on Enter ────────────────────────────────────────
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') loadLog();
+});
+
+// ── Live panel ─────────────────────────────────────────────
+const LIVE_MAX       = 50;
+const LIVE_FADE_SEC  = 10;
+const LIVE_ALPHA     = 0.18;
+
+let liveHighlights   = [];
+let liveAnimating    = false;
+let liveLastTs       = null;
+let livePrevSet      = new Set();
+let liveInitDone     = false;
+let liveTotalNew     = 0;
+
+function animateLive(ts) {
+  const delta = liveLastTs ? (ts - liveLastTs) / 1000 : 0;
+  liveLastTs = ts;
+
+  for (let i = liveHighlights.length - 1; i >= 0; i--) {
+    const h = liveHighlights[i];
+    h.t += delta / h.dur;
+    if (h.t >= 1) {
+      h.el.style.removeProperty('background-color');
+      liveHighlights.splice(i, 1);
+    } else {
+      const a = ((1 - h.t) * LIVE_ALPHA).toFixed(4);
+      h.el.style.backgroundColor = `rgba(79,168,197,${a})`;
+    }
+  }
+
+  if (liveHighlights.length > 0) {
+    requestAnimationFrame(animateLive);
+  } else {
+    liveAnimating = false;
+    liveLastTs    = null;
+  }
+}
+
+function startHighlights(els) {
+  if (liveHighlights.length > 0) {
+    // Speed up existing highlights when new events arrive
+    const n      = els.length;
+    const factor = n >= 4 ? 1.35 : n >= 2 ? 1.2 : 1.1;
+    liveHighlights.forEach(h => { h.dur = Math.max(h.dur / factor, 0.3); });
+  }
+  els.forEach(el => {
+    el.style.backgroundColor = `rgba(79,168,197,${LIVE_ALPHA})`;
+    liveHighlights.push({ el, t: 0, dur: LIVE_FADE_SEC });
+  });
+  if (!liveAnimating) {
+    liveAnimating = true;
+    liveLastTs    = null;
+    requestAnimationFrame(animateLive);
+  }
+}
+
+function buildLiveLine(line) {
+  const sevMatch = line.match(/\[(EMERG|ALERT|CRIT|ERROR|WARN|NOTICE|INFO|DEBUG)\s*\]/i);
+  const sev      = sevMatch ? sevMatch[1].toLowerCase() : 'info';
+  const isDown   = /link\s+down|port.*down/i.test(line);
+  const isUp     = /link\s+up|port.*up/i.test(line);
+  const col      = line.match(/^(\d{4}-\d{2}-\d{2}\s([\d:]+))\s+\[([^\]]+)\]\s+(\d+\.\d+\.\d+\.\d+)[^|]*\|\s*(.*)$/);
+
+  let time = '', sevStr = sev.toUpperCase(), ip = '', msg = line;
+  if (col) { time = col[2]; sevStr = col[3].trim(); ip = col[4]; msg = col[5]; }
+
+  msg = msg
+    .replace(/\b(down)\b/gi, '<span class="kw-down">$1</span>')
+    .replace(/\b(up)\b/gi,   '<span class="kw-up">$1</span>')
+    .replace(/\b(fault|error|fail)\b/gi, '<span class="kw-fault">$1</span>');
+
+  const cls = ['live-line', `sev-${sev}`, isDown ? 'ev-down' : '', isUp ? 'ev-up' : '']
+    .filter(Boolean).join(' ');
+  const el  = document.createElement('div');
+  el.className = cls;
+  el.innerHTML = `<span class="live-time">${time}${ip ? `&nbsp;&nbsp;<span style="color:var(--accent)">${ip}</span>` : ''}</span>
+    <div class="live-body">
+      <span class="sev-chip chip-${sev}">${sevStr}</span>
+      <span class="live-msg">${msg}</span>
+    </div>`;
+  return el;
+}
+
+async function pollLive() {
+  try {
+    const rf    = await fetch('/api/files');
+    const files = await rf.json();
+    const evFile = [...files].filter(f => f.startsWith('events_')).sort().at(-1);
+    if (!evFile) return;
+
+    const rl   = await fetch(`/api/log?file=${encodeURIComponent(evFile)}&lines=100`);
+    const data = await rl.json();
+    const lines = (data.lines || []).filter(l => l.trim());
+
+    if (!liveInitDone) {
+      // First load: populate set, render existing lines without highlight
+      lines.forEach(l => livePrevSet.add(l));
+      liveInitDone = true;
+      const feed = document.getElementById('liveFeed');
+      feed.innerHTML = '';
+      [...lines].reverse().forEach(l => feed.appendChild(buildLiveLine(l)));
+      return;
+    }
+
+    const newLines = lines.filter(l => !livePrevSet.has(l));
+    if (!newLines.length) return;
+    newLines.forEach(l => livePrevSet.add(l));
+
+    const feed   = document.getElementById('liveFeed');
+    const newEls = newLines.map(buildLiveLine);
+    [...newEls].reverse().forEach(el => feed.prepend(el));
+    while (feed.children.length > LIVE_MAX) feed.removeChild(feed.lastChild);
+
+    startHighlights(newEls);
+    updateStatus();
+
+    liveTotalNew += newLines.length;
+    document.getElementById('liveBadge').textContent = liveTotalNew;
+  } catch(e) { /* server unavailable */ }
+}
+
+// ── Sidebar drawer ─────────────────────────────────────────
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('visible');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('visible');
+}
+
+// ── Init ───────────────────────────────────────────────────
+document.getElementById('footerFile').textContent = currentFile;
+loadFiles();
+loadLog();
+toggleAuto();
+pollLive();
+setInterval(pollLive, INTERVAL);
+</script>
+</body>
+</html>
