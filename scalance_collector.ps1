@@ -1,6 +1,6 @@
 # =============================================================
 #  scalance_collector.ps1
-#  Scalance Syslog Collector — PowerShell edition
+#  Scalance Syslog Collector - PowerShell edition
 #  Run:    powershell -ExecutionPolicy Bypass -File scalance_collector.ps1
 #  Rights: Administrator required for port 514
 #          Alternatively change PORT to 5140 in config.ps1
@@ -12,10 +12,10 @@
 
 $SEVERITY_LABELS = @("EMERG","ALERT","CRIT","ERROR","WARN","NOTICE","INFO","DEBUG")
 
-# ─── Create log directory if missing ──────────────────────────
+# --- Create log directory if missing --------------------------
 New-Item -ItemType Directory -Force -Path $LOG_DIR | Out-Null
 
-# ─── Log rotation — remove files older than $ROTATE_DAYS ──────
+# --- Log rotation: remove files older than $ROTATE_DAYS ------
 function Invoke-LogRotation {
     $cutoff = (Get-Date).AddDays(-$ROTATE_DAYS)
     Get-ChildItem -Path $LOG_DIR -Filter "*.log" |
@@ -23,7 +23,7 @@ function Invoke-LogRotation {
         Remove-Item -Force
 }
 
-# ─── Build display label for a source IP ──────────────────────
+# --- Build display label for a source IP ----------------------
 function Get-HostLabel($ip) {
     if ($SWITCH_NAMES.ContainsKey($ip)) {
         return "$ip ($($SWITCH_NAMES[$ip]))"
@@ -31,7 +31,7 @@ function Get-HostLabel($ip) {
     return $ip
 }
 
-# ─── Resolve dated log file path ──────────────────────────────
+# --- Resolve dated log file path ------------------------------
 function Get-DatedLogPath($baseName) {
     $date = Get-Date -Format "yyyy-MM-dd"
     return Join-Path $LOG_DIR "${baseName}_${date}.log"
@@ -49,7 +49,7 @@ function Get-EventsLogPath {
     return Get-DatedLogPath "events"
 }
 
-# ─── Parse Syslog RFC 3164 ────────────────────────────────────
+# --- Parse Syslog RFC 3164 ------------------------------------
 function Parse-Syslog($raw, $srcIP) {
     $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $result = @{
@@ -65,7 +65,7 @@ function Parse-Syslog($raw, $srcIP) {
     return $result
 }
 
-# ─── Check message against event filter patterns ──────────────
+# --- Check message against event filter patterns --------------
 function Test-IsEvent($message) {
     if ($EVENT_PATTERNS.Count -eq 0) { return $true }
     foreach ($pattern in $EVENT_PATTERNS) {
@@ -74,7 +74,7 @@ function Test-IsEvent($message) {
     return $false
 }
 
-# ─── Append line to file; run rotation on day change ──────────
+# --- Append line to file; run rotation on day change ---------
 $script:currentDate = (Get-Date).Date
 
 function Write-LogLine($filepath, $line) {
@@ -86,7 +86,7 @@ function Write-LogLine($filepath, $line) {
     Add-Content -Path $filepath -Value $line -Encoding UTF8
 }
 
-# ─── Main loop ────────────────────────────────────────────────
+# --- Main loop ------------------------------------------------
 $endpoint = New-Object System.Net.IPEndPoint([System.Net.IPAddress]::Any, $PORT)
 try {
     $udpClient = New-Object System.Net.Sockets.UdpClient($PORT)

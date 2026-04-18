@@ -36,21 +36,15 @@ function Send-Response($ctx, $content, $mime, $code = 200) {
     $ctx.Response.OutputStream.Close()
 }
 
-function Get-QueryParam($url, $param) {
-    $uri = [System.Uri]$url
-    $query = [System.Web.HttpUtility]::ParseQueryString($uri.Query)
-    return $query[$param]
-}
-
 Add-Type -AssemblyName System.Web
 
 try {
     while ($listener.IsListening) {
-        $ctx = $listener.GetContext()
-        $req = $ctx.Request
+        $ctx  = $listener.GetContext()
+        $req  = $ctx.Request
         $path = $req.Url.AbsolutePath
 
-        # ── GET / → serve viewer.html ─────────────────────────
+        # -- GET / -> serve viewer.html ------------------------
         if ($path -eq "/" -or $path -eq "/index.html") {
             $htmlPath = Join-Path $SCRIPT_DIR "viewer.html"
             if (Test-Path $htmlPath) {
@@ -61,7 +55,7 @@ try {
             }
         }
 
-        # ── GET /api/files → list of .log files ───────────────
+        # -- GET /api/files -> list of .log files --------------
         elseif ($path -eq "/api/files") {
             $files = @()
             if (Test-Path $LOG_DIR) {
@@ -69,46 +63,36 @@ try {
                     Sort-Object Name |
                     Select-Object -ExpandProperty Name
             }
-            $json = $files | ConvertTo-Json -Compress
-            if ($files.Count -eq 0) { $json = "[]" }
+            $json = if ($files.Count -eq 0) { "[]" } else { $files | ConvertTo-Json -Compress }
             Send-Response $ctx $json "application/json"
         }
 
-        # ── GET /api/log?file=...&lines=...&search=... ────────
+        # -- GET /api/log?file=...&lines=...&search=... --------
         elseif ($path -eq "/api/log") {
             $query    = [System.Web.HttpUtility]::ParseQueryString($req.Url.Query)
-            $filename = $query["file"]
-            if (-not $filename) { $filename = "events.log" }
-            $maxLines = 200
-            if ($query["lines"]) { $maxLines = [int]$query["lines"] }
-            $search = ""
-            if ($query["search"]) { $search = $query["search"].ToLower() }
+            $filename = if ($query["file"]) { $query["file"] } else { "events.log" }
+            $maxLines = if ($query["lines"]) { [int]$query["lines"] } else { 200 }
+            $search   = if ($query["search"]) { $query["search"].ToLower() } else { "" }
 
-            # Path traversal protection
             $safeFile = [System.IO.Path]::GetFileName($filename)
             $fullPath = Join-Path $LOG_DIR $safeFile
 
             $result = @{ file = $safeFile; lines = @(); total = 0 }
 
             if (Test-Path $fullPath) {
-                $allLines = [string[]](Get-Content $fullPath -Encoding UTF8 -ErrorAction SilentlyContinue)
-                if ($null -eq $allLines) { $allLines = @() }
-                if ($allLines -isnot [array]) { $allLines = @($allLines) }
-
+                $allLines = @(Get-Content $fullPath -Encoding UTF8 -ErrorAction SilentlyContinue)
                 $result.total = $allLines.Count
 
                 if ($search) {
-                    $allLines = $allLines | Where-Object { $_.ToLower().Contains($search) }
+                    $allLines = @($allLines | Where-Object { $_.ToLower().Contains($search) })
                 }
 
-                $result.lines = [string[]]($allLines |
-                    Select-Object -Last $maxLines)
+                $result.lines = @($allLines | Select-Object -Last $maxLines)
             } else {
                 $result.error = "File not found: $safeFile"
             }
 
-            $json = $result | ConvertTo-Json -Compress -Depth 3
-            Send-Response $ctx $json "application/json"
+            Send-Response $ctx ($result | ConvertTo-Json -Compress -Depth 3) "application/json"
         }
 
         else {
