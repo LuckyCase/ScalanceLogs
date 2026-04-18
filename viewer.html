@@ -813,7 +813,7 @@ document.getElementById('searchInput').addEventListener('keydown', e => {
 });
 
 // ── Live panel ─────────────────────────────────────────────
-const LIVE_MAX            = 1000;
+const LIVE_MAX            = 100;
 const LIVE_FADE_SEC       = 30;    // highlight fade duration for new messages
 const LIVE_ALPHA          = 0.18;
 const LIVE_EXPIRE_MS      = 60 * 60 * 1000;  // remove messages older than 1 hour
@@ -825,7 +825,6 @@ let liveAnimating    = false;
 let liveLastTs       = null;
 let livePrevSet      = new Set();
 let liveInitDone     = false;
-let liveTotalNew     = 0;
 
 function animateLive(ts) {
   const delta = liveLastTs ? (ts - liveLastTs) / 1000 : 0;
@@ -838,6 +837,7 @@ function animateLive(ts) {
     if (h.t >= 1) {
       h.el.style.removeProperty('background-color');
       liveHighlights.splice(i, 1);
+      document.getElementById('liveBadge').textContent = liveHighlights.length;
     } else {
       h.el.style.backgroundColor = `rgba(79,168,197,${((1 - h.t) * LIVE_ALPHA).toFixed(4)})`;
     }
@@ -969,8 +969,7 @@ async function pollLive() {
     startHighlights(newEls);
     updateStatus();
 
-    liveTotalNew += newLines.length;
-    document.getElementById('liveBadge').textContent = liveTotalNew;
+    document.getElementById('liveBadge').textContent = liveHighlights.length;
   } catch(e) { /* server unavailable */ }
 }
 
