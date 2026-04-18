@@ -634,7 +634,7 @@
 
 <script>
 const API = '';
-let currentFile   = 'events.log';
+let currentFile   = '';
 let autoRefresh   = false;
 let autoTimer     = null;
 const INTERVAL    = 5000;
@@ -669,9 +669,19 @@ async function loadFiles() {
       el.innerHTML = '<div class="log-empty" style="height:80px;font-size:13px;">no files</div>';
       return;
     }
+
+    // Auto-select latest events_*.log on first load
+    if (!currentFile) {
+      const latest = [...files].filter(f => f.startsWith('events_')).sort().at(-1)
+                     || files[0];
+      currentFile = latest;
+      document.getElementById('footerFile').textContent = currentFile;
+      loadLog();
+    }
+
     el.innerHTML = files.map(f => `
       <div class="file-item ${f === currentFile ? 'active' : ''}"
-           data-events="${f === 'events.log'}"
+           data-events="${f.startsWith('events_')}"
            onclick="selectFile('${f}')">
         <span class="file-icon"></span>${f}
       </div>`).join('');
@@ -700,7 +710,7 @@ async function loadLog() {
     renderLog(data);
   } catch(e) {
     document.getElementById('logWrap').innerHTML =
-      '<div class="log-empty">Load error. Is viewer_server.py running?</div>';
+      '<div class="log-empty">Load error. Is viewer_server.ps1 / viewer_server.py running?</div>';
   }
 }
 
@@ -922,9 +932,8 @@ function closeSidebar() {
 }
 
 // ── Init ───────────────────────────────────────────────────
-document.getElementById('footerFile').textContent = currentFile;
-loadFiles();
-loadLog();
+document.getElementById('footerFile').textContent = '—';
+loadFiles();   // auto-selects latest events_*.log and calls loadLog()
 toggleAuto();
 pollLive();
 setInterval(pollLive, INTERVAL);

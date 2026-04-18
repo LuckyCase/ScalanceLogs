@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Game/Downloads/**)",
+      "Bash(powershell -command \"Expand-Archive -Path files.zip -DestinationPath ./files_extracted -Force\")",
+      "Bash(cp \"C:/Users/Game/Downloads/files_extracted/scalance_collector.ps1\" \"C:/Projects/ScalanceLogs/scalance_collector.ps1\")",
+      "Bash(cp \"C:/Users/Game/Downloads/files_extracted/viewer_server.ps1\" \"C:/Projects/ScalanceLogs/viewer_server.ps1\")",
+      "Bash(powershell -command \"\\(Get-Content scalance_collector.ps1 -Raw\\) -replace '─', '-' | Set-Content scalance_collector.ps1 -Encoding UTF8\")",
+      "Bash(powershell -command \"\\(Get-Content viewer_server.ps1 -Raw\\) -replace '─', '-' | Set-Content viewer_server.ps1 -Encoding UTF8\")",
+      "Bash(powershell -command \"\\(Get-Content config.ps1 -Raw\\) -replace '─', '-' | Set-Content config.ps1 -Encoding UTF8\")"
+    ]
+  }
+}

@@ -83,7 +83,15 @@ function Write-LogLine($filepath, $line) {
         $script:currentDate = $today
         Invoke-LogRotation
     }
-    Add-Content -Path $filepath -Value $line -Encoding UTF8
+    $stream = [System.IO.File]::Open(
+        $filepath,
+        [System.IO.FileMode]::Append,
+        [System.IO.FileAccess]::Write,
+        [System.IO.FileShare]::ReadWrite
+    )
+    $writer = [System.IO.StreamWriter]::new($stream, [System.Text.Encoding]::UTF8)
+    try   { $writer.WriteLine($line) }
+    finally { $writer.Close(); $stream.Close() }
 }
 
 # --- Main loop ------------------------------------------------
