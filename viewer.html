@@ -634,6 +634,15 @@
 
 <script>
 const API = '';
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 let currentFile   = '';
 let autoRefresh   = false;
 let autoTimer     = null;
@@ -751,7 +760,10 @@ function renderLog(data) {
       host = host.trim();
     }
 
-    msg = msg
+    ts     = escapeHtml(ts);
+    host   = escapeHtml(host);
+    sevStr = escapeHtml(sevStr);
+    msg = escapeHtml(msg)
       .replace(/\b(down)\b/gi, '<span class="kw-down">$1</span>')
       .replace(/\b(up)\b/gi,   '<span class="kw-up">$1</span>')
       .replace(/\b(fault|error|fail)\b/gi, '<span class="kw-fault">$1</span>');
@@ -866,7 +878,10 @@ function buildLiveLine(line) {
   let time = '', sevStr = sev.toUpperCase(), ip = '', msg = line;
   if (col) { time = col[2]; sevStr = col[3].trim(); ip = col[4]; msg = col[5]; }
 
-  msg = msg
+  time   = escapeHtml(time);
+  sevStr = escapeHtml(sevStr);
+  ip     = escapeHtml(ip);
+  msg = escapeHtml(msg)
     .replace(/\b(down)\b/gi, '<span class="kw-down">$1</span>')
     .replace(/\b(up)\b/gi,   '<span class="kw-up">$1</span>')
     .replace(/\b(fault|error|fail)\b/gi, '<span class="kw-fault">$1</span>');

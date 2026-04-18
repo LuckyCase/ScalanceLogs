@@ -78,7 +78,7 @@ try {
                 $files = @()
                 if (Test-Path $LOG_DIR) {
                     $files = @(Get-ChildItem -Path $LOG_DIR -Filter "*.log" |
-                        Where-Object { $_.Name -ne "viewer_server.log" } |
+                        Where-Object { $_.Name -notin @("viewer_server.log", "unknown_sources.log") } |
                         Sort-Object Name |
                         Select-Object -ExpandProperty Name)
                 }

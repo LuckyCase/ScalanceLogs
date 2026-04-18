@@ -127,6 +127,19 @@ try {
         $srcIP = $endpoint.Address.ToString()
         $raw   = [System.Text.Encoding]::UTF8.GetString($data).Trim()
 
+        # IP whitelist — drop packets from unknown sources
+        if ($SWITCH_NAMES.Count -gt 0 -and -not $SWITCH_NAMES.ContainsKey($srcIP)) {
+            $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+            $unknownLog = Join-Path $LOG_DIR "unknown_sources.log"
+            $unknownLine = "$ts [WARN  ] REJECTED $srcIP | $raw"
+            $stream = [System.IO.File]::Open($unknownLog, [System.IO.FileMode]::Append, [System.IO.FileAccess]::Write, [System.IO.FileShare]::ReadWrite)
+            $writer = [System.IO.StreamWriter]::new($stream, [System.Text.Encoding]::UTF8)
+            try   { $writer.WriteLine($unknownLine) }
+            finally { $writer.Close(); $stream.Close() }
+            Write-Host $unknownLine -ForegroundColor DarkGray
+            continue
+        }
+
         $parsed = Parse-Syslog $raw $srcIP
         $label  = Get-HostLabel $srcIP
         $sevStr = $SEVERITY_LABELS[$parsed.Severity]

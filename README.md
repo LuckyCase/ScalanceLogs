@@ -124,14 +124,54 @@ System → Syslog
 - **Live panel** — real-time event feed with fade highlight on new events
 - **Status indicator** — shows time since last new event; turns yellow if stale
 
+## Security
+
+### IP Whitelist
+
+The collector accepts syslog packets **only from IPs listed in `SWITCH_NAMES`** (`config.py` / `config.ps1`). Packets from unknown sources are rejected and written to `logs/unknown_sources.log` for audit.
+
+If `SWITCH_NAMES` is empty — all sources are accepted (development mode).
+
+Rejected packet example in `unknown_sources.log`:
+```
+2026-04-17 21:14:03 [WARN  ] REJECTED 10.0.0.99 | <134>Apr 17 21:14:03 ...
+```
+
+### XSS Protection
+
+All syslog message content is HTML-escaped before rendering in the browser. Injected HTML tags from malicious syslog packets are displayed as plain text and never executed.
+
+### Network Exposure
+
+- **Collector** (UDP 514/5140) — accessible from the local network. Only listed switch IPs are accepted.
+- **Viewer** (HTTP 8080) — binds to `localhost` only. Not reachable from the network by default.
+
+### Recommendations
+
+- Keep `SWITCH_NAMES` populated with all known switch IPs
+- Run the collector on a dedicated isolated PC or VLAN
+- Monitor `unknown_sources.log` for unexpected syslog sources
+
 ## Files
 
 | File | Description |
 |------|-------------|
-| `config.py` | Configuration — edit this to set up your switches |
-| `scalance_collector.py` | UDP syslog listener and log writer |
-| `viewer_server.py` | HTTP server for the web UI |
-| `viewer.html` | Single-page log viewer UI |
+| `config.py` | Python configuration |
+| `config.ps1` | PowerShell configuration (shared by both PS1 scripts) |
+| `scalance_collector.py` | Python UDP syslog collector |
+| `scalance_collector.ps1` | PowerShell UDP syslog collector |
+| `viewer_server.py` | Python HTTP server for the web UI |
+| `viewer_server.ps1` | PowerShell HTTP server for the web UI |
+| `viewer.html` | Single-page log viewer UI (used by both server variants) |
+
+**Runtime log files** (in `logs/`):
+
+| File | Description |
+|------|-------------|
+| `events_YYYY-MM-DD.log` | Filtered events from all switches |
+| `192_168_x_x_Name_YYYY-MM-DD.log` | All messages per switch |
+| `viewer_server.log` | HTTP server start/stop and errors |
+| `unknown_sources.log` | Rejected packets from unlisted IPs |
 
 ## Author
 
