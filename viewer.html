@@ -740,9 +740,8 @@ function renderLog(data) {
   }
 
   let errCount=0, warnCount=0, downCount=0, upCount=0;
-  const atBottom = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 40;
 
-  wrap.innerHTML = lines.map(line => {
+  wrap.innerHTML = [...lines].reverse().map(line => {
     const sevMatch = line.match(/\[(EMERG|ALERT|CRIT|ERROR|WARN|NOTICE|INFO|DEBUG)\s*\]/i);
     const sev      = sevMatch ? sevMatch[1].toLowerCase() : 'info';
     const isDown   = /link\s+down|port.*down/i.test(line);
@@ -789,7 +788,6 @@ function renderLog(data) {
   document.getElementById('statDown').textContent  = downCount;
   document.getElementById('statUp').textContent    = upCount;
 
-  if (atBottom) wrap.scrollTop = wrap.scrollHeight;
 }
 
 function resetStats() {
@@ -815,11 +813,14 @@ document.getElementById('searchInput').addEventListener('keydown', e => {
 });
 
 // ── Live panel ─────────────────────────────────────────────
-const LIVE_MAX       = 50;
-const LIVE_FADE_SEC  = 10;
-const LIVE_ALPHA     = 0.18;
+const LIVE_MAX            = 1000;
+const LIVE_FADE_SEC       = 30;    // highlight fade duration for new messages
+const LIVE_ALPHA          = 0.18;
+const LIVE_EXPIRE_MS      = 60 * 60 * 1000;  // remove messages older than 1 hour
+const LIVE_EXPIRE_FADE    = 10;              // fade-out duration before removal
 
-let liveHighlights   = [];
+let liveHighlights   = [];  // { el, t, dur } — new message highlight (background)
+let liveExpiries     = [];  // { el, t }      — old message fade-out (opacity)
 let liveAnimating    = false;
 let liveLastTs       = null;
 let livePrevSet      = new Set();
@@ -830,6 +831,7 @@ function animateLive(ts) {
   const delta = liveLastTs ? (ts - liveLastTs) / 1000 : 0;
   liveLastTs = ts;
 
+  // Highlight fades (background-color)
   for (let i = liveHighlights.length - 1; i >= 0; i--) {
     const h = liveHighlights[i];
     h.t += delta / h.dur;
@@ -837,12 +839,24 @@ function animateLive(ts) {
       h.el.style.removeProperty('background-color');
       liveHighlights.splice(i, 1);
     } else {
-      const a = ((1 - h.t) * LIVE_ALPHA).toFixed(4);
-      h.el.style.backgroundColor = `rgba(79,168,197,${a})`;
+      h.el.style.backgroundColor = `rgba(79,168,197,${((1 - h.t) * LIVE_ALPHA).toFixed(4)})`;
     }
   }
 
-  if (liveHighlights.length > 0) {
+  // Expiry fades (opacity → remove)
+  for (let i = liveExpiries.length - 1; i >= 0; i--) {
+    const e = liveExpiries[i];
+    e.t += delta / LIVE_EXPIRE_FADE;
+    if (e.t >= 1) {
+      e.el.remove();
+      liveExpiries.splice(i, 1);
+    } else {
+      e.el.style.opacity = (1 - e.t).toFixed(4);
+      e.el.style.maxHeight = ((1 - e.t) * 48).toFixed(1) + 'px';  // collapse height
+    }
+  }
+
+  if (liveHighlights.length > 0 || liveExpiries.length > 0) {
     requestAnimationFrame(animateLive);
   } else {
     liveAnimating = false;
@@ -850,9 +864,16 @@ function animateLive(ts) {
   }
 }
 
+function ensureAnimating() {
+  if (!liveAnimating) {
+    liveAnimating = true;
+    liveLastTs    = null;
+    requestAnimationFrame(animateLive);
+  }
+}
+
 function startHighlights(els) {
   if (liveHighlights.length > 0) {
-    // Speed up existing highlights when new events arrive
     const n      = els.length;
     const factor = n >= 4 ? 1.35 : n >= 2 ? 1.2 : 1.1;
     liveHighlights.forEach(h => { h.dur = Math.max(h.dur / factor, 0.3); });
@@ -861,11 +882,25 @@ function startHighlights(els) {
     el.style.backgroundColor = `rgba(79,168,197,${LIVE_ALPHA})`;
     liveHighlights.push({ el, t: 0, dur: LIVE_FADE_SEC });
   });
-  if (!liveAnimating) {
-    liveAnimating = true;
-    liveLastTs    = null;
-    requestAnimationFrame(animateLive);
-  }
+  ensureAnimating();
+}
+
+// Check for elements older than LIVE_EXPIRE_MS and start their fade-out
+function checkLiveExpiry() {
+  const now  = Date.now();
+  const feed = document.getElementById('liveFeed');
+  let started = false;
+  [...feed.children].forEach(el => {
+    if (liveExpiries.some(e => e.el === el)) return;  // already fading out
+    const addedAt = parseInt(el.dataset.addedAt || '0');
+    if (addedAt && (now - addedAt) >= LIVE_EXPIRE_MS) {
+      el.style.overflow  = 'hidden';
+      el.style.maxHeight = el.offsetHeight + 'px';
+      liveExpiries.push({ el, t: 0 });
+      started = true;
+    }
+  });
+  if (started) ensureAnimating();
 }
 
 function buildLiveLine(line) {
@@ -890,6 +925,9 @@ function buildLiveLine(line) {
     .filter(Boolean).join(' ');
   const el  = document.createElement('div');
   el.className = cls;
+  // store wall-clock time for expiry: parse from log line, fall back to now
+  const dtMatch = line.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
+  el.dataset.addedAt = dtMatch ? new Date(dtMatch[1]).getTime() : Date.now();
   el.innerHTML = `<span class="live-time">${time}${ip ? `&nbsp;&nbsp;<span style="color:var(--accent)">${ip}</span>` : ''}</span>
     <div class="live-body">
       <span class="sev-chip chip-${sev}">${sevStr}</span>
@@ -905,17 +943,17 @@ async function pollLive() {
     const evFile = [...files].filter(f => f.startsWith('events_')).sort().at(-1);
     if (!evFile) return;
 
-    const rl   = await fetch(`/api/log?file=${encodeURIComponent(evFile)}&lines=100`);
+    const rl   = await fetch(`/api/log?file=${encodeURIComponent(evFile)}&lines=${LIVE_MAX}`);
     const data = await rl.json();
     const lines = (data.lines || []).filter(l => l.trim());
 
     if (!liveInitDone) {
-      // First load: populate set, render existing lines without highlight
       lines.forEach(l => livePrevSet.add(l));
       liveInitDone = true;
       const feed = document.getElementById('liveFeed');
       feed.innerHTML = '';
-      [...lines].reverse().forEach(l => feed.appendChild(buildLiveLine(l)));
+      [...lines].slice(-LIVE_MAX).reverse().forEach(l => feed.appendChild(buildLiveLine(l)));
+      checkLiveExpiry();
       return;
     }
 
@@ -952,6 +990,7 @@ loadFiles();   // auto-selects latest events_*.log and calls loadLog()
 toggleAuto();
 pollLive();
 setInterval(pollLive, INTERVAL);
+setInterval(checkLiveExpiry, 30000);  // expire messages older than 1 hour
 </script>
 </body>
 </html>

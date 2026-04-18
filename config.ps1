@@ -4,7 +4,7 @@
 # =============================================================
 
 # --- Network --------------------------------------------------
-$PORT = 514                     # UDP syslog port
+$PORT = 5140                     # UDP syslog port
                                 # if no admin rights - change to 5140
                                 # and set the same port in Scalance WBM
 
