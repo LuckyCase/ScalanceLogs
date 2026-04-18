@@ -963,7 +963,7 @@ async function pollLive() {
 
     const feed   = document.getElementById('liveFeed');
     const newEls = newLines.map(buildLiveLine);
-    [...newEls].reverse().forEach(el => feed.prepend(el));
+    newEls.forEach(el => feed.prepend(el));
     while (feed.children.length > LIVE_MAX) feed.removeChild(feed.lastChild);
 
     startHighlights(newEls);
