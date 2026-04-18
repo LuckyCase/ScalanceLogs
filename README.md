@@ -82,6 +82,58 @@ EVENT_PATTERNS = [
 
 **Port 514** requires Administrator. To run without elevated rights, change to port 5140 in `config.py` and in Scalance WBM.
 
+## Adding Event Patterns
+
+Scalance switches send different message types depending on firmware and configuration. To discover what your switches actually emit, follow these steps.
+
+**Step 1 — collect everything first**
+
+Set an empty filter so all messages are written to `events.log`:
+
+```powershell
+# config.ps1
+$EVENT_PATTERNS = @()
+```
+
+Run the collector for a day or two during normal operation.
+
+**Step 2 — find unique message types**
+
+```powershell
+Get-Content logs\events_2026-04-17.log |
+    ForEach-Object { ($_ -split '\|')[-1].Trim() } |
+    Sort-Object -Unique
+```
+
+Example output:
+```
+FAULT: Power supply failure
+LINK: Port 1 link down
+LINK: Port 3 link up
+SNMP: Authentication failure from 10.0.0.5
+STP: Topology change detected
+```
+
+**Step 3 — write patterns from broad to specific**
+
+```powershell
+$EVENT_PATTERNS = @(
+    "(?i)link\s+(up|down)",    # all link state changes
+    "(?i)(fault|error|fail)",  # any fault or error
+    "(?i)snmp.*auth",          # SNMP authentication failures
+    "(?i)stp",                 # spanning tree events
+)
+```
+
+**Wildcard in regex** — use `.*` (any characters), not `*`:
+
+```powershell
+"(?i)port.*link"   # matches: Port 1 link down, Port 12 link up, ...
+"(?i)fault.*"      # matches: fault and anything after it
+```
+
+`(?i)` at the start makes the pattern case-insensitive.
+
 ## Log Files
 
 Files are created daily and stored in `LOG_DIR`:
