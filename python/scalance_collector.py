@@ -1,7 +1,7 @@
 """
-Scalance Syslog Collector
+Industrial Syslog Collector
 =========================
-Receives UDP Syslog from Scalance XC-200, writes per-switch logs
+Receives UDP Syslog from Siemens industrial switches, writes per-switch logs
 and a separate events.log with filtered events.
 
 Log files are named with the current date, e.g.:
@@ -163,7 +163,7 @@ def main():
     names_info = f"{len(SWITCH_NAMES)} switch(es)" if SWITCH_NAMES else "no names configured (IP only)"
 
     print("=" * 60)
-    print("  Scalance Syslog Collector")
+    print("  Industrial Syslog Collector")
     print("=" * 60)
     print(f"  Port:     UDP {LISTEN_PORT}")
     print(f"  Logs:     {LOG_DIR}")

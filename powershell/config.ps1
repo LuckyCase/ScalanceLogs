@@ -1,18 +1,18 @@
 # =============================================================
-#  Scalance Syslog Collector - configuration
+#  Industrial Syslog Collector - configuration
 #  Loaded by scalance_collector.ps1 and viewer_server.ps1
 # =============================================================
 
 # --- Network --------------------------------------------------
 $PORT = 5140                     # UDP syslog port
                                 # if no admin rights - change to 5140
-                                # and set the same port in Scalance WBM
+                                # and set the same port in the switch WBM
 
 # --- Logs -----------------------------------------------------
-$SCRIPT_ROOT = Split-Path -Parent $MyInvocation.ScriptName
+$SCRIPT_ROOT = Split-Path -Parent (Split-Path -Parent $MyInvocation.ScriptName)  # project root
 
-# Relative to script folder:  Join-Path $SCRIPT_ROOT "logs"
-# Absolute path:               "C:\Logs\Scalance"
+# Relative to project root:  Join-Path $SCRIPT_ROOT "logs"
+# Absolute path:              "C:\Logs\SW-Log"
 $LOG_DIR = Join-Path $SCRIPT_ROOT "logs"
 
 $ROTATE_DAYS = 30               # keep log files for N days

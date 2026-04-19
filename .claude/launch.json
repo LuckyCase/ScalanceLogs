@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "viewer",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["viewer_server.py"],
+      "port": 8080,
+      "autoPort": false
+    }
+  ]
+}

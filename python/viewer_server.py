@@ -1,5 +1,5 @@
 """
-Scalance Log Viewer — HTTP server
+SW-Log Viewer — HTTP server
 ==================================
 Serves viewer.html and an API for reading log files.
 
@@ -47,6 +47,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             search   = params.get("search", [""])[0].lower()
             self._json(self._read_log(filename, lines, search))
 
+        elif path == "/api/config":
+            self._json(self._get_config())
+
         else:
             self.send_error(404)
 
@@ -92,9 +95,26 @@ class Handler(http.server.BaseHTTPRequestHandler):
         except Exception as e:
             return {"lines": [], "total": 0, "file": safe, "error": str(e)}
 
+    def _get_config(self) -> dict:
+        result = {"message_types": [], "quick_filters": []}
+
+        if hasattr(config, "MESSAGE_TYPES"):
+            for mt in config.MESSAGE_TYPES:
+                result["message_types"].append({
+                    "pattern": mt["pattern"].pattern,
+                    "label":   mt["label"],
+                    "color":   mt.get("color", ""),
+                    "bg":      mt.get("bg", ""),
+                })
+
+        if hasattr(config, "QUICK_FILTERS"):
+            result["quick_filters"] = list(config.QUICK_FILTERS)
+
+        return result
+
 
 def main():
-    print(f"Scalance Log Viewer  →  http://localhost:{PORT}")
+    print(f"SW-Log Viewer  →  http://localhost:{PORT}")
     print(f"Logs from: {LOG_DIR}")
     print("Ctrl+C to stop")
     with http.server.HTTPServer(("0.0.0.0", PORT), Handler) as srv:

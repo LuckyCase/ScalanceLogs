@@ -1,6 +1,6 @@
 # =============================================================
 #  viewer_server.ps1
-#  HTTP server for Scalance log viewer
+#  HTTP server for SW-Log Viewer
 #  Run:  powershell -ExecutionPolicy Bypass -File viewer_server.ps1
 #  Open: http://localhost:8080
 # =============================================================

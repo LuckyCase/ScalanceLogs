@@ -1,6 +1,6 @@
 # =============================================================
 #  scalance_collector.ps1
-#  Scalance Syslog Collector - PowerShell edition
+#  Industrial Syslog Collector - PowerShell edition
 #  Run:    powershell -ExecutionPolicy Bypass -File scalance_collector.ps1
 #  Rights: Administrator required for port 514
 #          Alternatively change PORT to 5140 in config.ps1
@@ -108,7 +108,7 @@ try {
 Invoke-LogRotation
 
 Write-Host ("=" * 60)
-Write-Host "  Scalance Syslog Collector (PowerShell)"
+Write-Host "  Industrial Syslog Collector (PowerShell)"
 Write-Host ("=" * 60)
 Write-Host "  Port:     UDP $PORT"
 Write-Host "  Logs:     $LOG_DIR"
