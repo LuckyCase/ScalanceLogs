@@ -465,6 +465,14 @@
   .col-host { min-width: 200px; flex-shrink: 0; color: var(--accent); }
   .col-msg  { color: var(--text); flex: 1; }
 
+  .ip-link {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--accent2);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .ip-link:hover { color: #fff; border-bottom-color: var(--accent); }
+
   .sev-chip {
     display: inline-block;
     padding: 2px 6px;
@@ -975,6 +983,13 @@ async function loadLog() {
   }
 }
 
+// ── Render host cell: IP as clickable link ──────────────────────
+function renderHost(host) {
+  const m = host.match(/^(\d+\.\d+\.\d+\.\d+)(.*)/);
+  if (!m) return escapeHtml(host);
+  return `<a class="ip-link" href="https://${escapeHtml(m[1])}" target="_blank" rel="noopener">${escapeHtml(m[1])}</a>${escapeHtml(m[2])}`;
+}
+
 // ── Extract useful message from raw syslog ──────────────────────
 // Input: "<134>1 2000-01-08T... HOSTNAME APP PROCID MSGID [meta sysUpTime="..."] Useful text."
 // Output: "Useful text."
@@ -1040,7 +1055,7 @@ function renderLog(data) {
         <span class="col-expand" onclick="toggleExpand(this)" title="Show raw syslog">▸</span>
         <span class="col-ts">${escapeHtml(ts)}</span>
         <span class="col-sev">${chipHtml}</span>
-        <span class="col-host">${escapeHtml(host)}</span>
+        <span class="col-host">${renderHost(host)}</span>
         <span class="col-msg">${msgHtml}</span>
       </div>
       <div class="raw-expand" hidden>${escapeHtml(rawPart)}</div>

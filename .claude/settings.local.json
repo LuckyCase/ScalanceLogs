@@ -33,7 +33,11 @@
       "Bash(sed -i 's|set the same port in Scalance WBM|set the same port in the switch WBM|g' powershell/config.ps1)",
       "Bash(sed -i 's|C:\\\\\\\\Logs\\\\\\\\Scalance|C:\\\\\\\\Logs\\\\\\\\SW-Log|g' powershell/config.ps1)",
       "Bash(sed -i 's|# Scalance Syslog Collector|# Industrial Syslog Collector|g' README.md)",
-      "Bash(sed -i 's|in Scalance WBM →|in the switch WBM →|g' README.md)"
+      "Bash(sed -i 's|in Scalance WBM →|in the switch WBM →|g' README.md)",
+      "Bash(copy /Y \"C:\\\\Projects\\\\ScalanceLogs\\\\viewer.html\" \"C:\\\\Projects\\\\ScalanceLogs\\\\python\\\\viewer.html\")",
+      "Bash(copy /Y \"C:\\\\Projects\\\\ScalanceLogs\\\\viewer.html\" \"C:\\\\Projects\\\\ScalanceLogs\\\\powershell\\\\viewer.html\")",
+      "PowerShell(Copy-Item \"C:\\\\Projects\\\\ScalanceLogs\\\\viewer.html\" \"C:\\\\Projects\\\\ScalanceLogs\\\\python\\\\viewer.html\" -Force)",
+      "PowerShell(Copy-Item \"C:\\\\Projects\\\\ScalanceLogs\\\\viewer.html\" \"C:\\\\Projects\\\\ScalanceLogs\\\\powershell\\\\viewer.html\" -Force)"
     ]
   }
 }
