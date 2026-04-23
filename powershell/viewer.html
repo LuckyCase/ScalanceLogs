@@ -111,8 +111,11 @@
     padding: 10px 0;
     width: 32px;
     flex-shrink: 0;
+    cursor: pointer;
+    transition: background 0.2s;
   }
   aside.collapsed .sidebar-strip { display: flex; }
+  .sidebar-strip:hover { background: rgba(79,168,197,0.12); }
 
   /* Main content (hidden when collapsed) */
   .sidebar-main {
@@ -251,30 +254,25 @@
   .fc-icon { width: 5px; height: 5px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
   .file-child.active .fc-icon { background: var(--accent); }
 
-  /* ── Sidebar resizer ── */
-  .sidebar-resizer {
-    height: 5px;
-    background: var(--border);
-    cursor: ns-resize;
-    flex-shrink: 0;
-    transition: background 0.15s;
-    position: relative;
-  }
-  .sidebar-resizer::after {
-    content: '';
-    position: absolute;
-    inset: -3px 0;
-  }
-  .sidebar-resizer:hover,
-  .sidebar-resizer.dragging { background: var(--accent2); }
-
-  /* ── Switches section ── */
-  .sidebar-switches-section {
-    flex: 0 0 160px;
+  /* ── Switches section (in live panel) ── */
+  .live-switches-section {
+    flex: 0 0 120px;
     display: flex;
     flex-direction: column;
-    min-height: 60px;
+    border-bottom: 1px solid var(--border);
     overflow: hidden;
+    min-height: 40px;
+  }
+
+  .live-switches-label {
+    padding: 6px 14px 5px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
   }
 
   .switch-feed {
@@ -284,7 +282,7 @@
   }
 
   .switch-item {
-    padding: 5px 12px;
+    padding: 5px 14px;
     font-family: var(--mono);
     font-size: 12px;
     color: var(--text);
@@ -303,12 +301,25 @@
   }
 
   .sw-empty {
-    padding: 12px;
+    padding: 10px 14px;
     font-family: var(--mono);
     font-size: 11px;
     color: var(--text-dim);
     text-align: center;
   }
+
+  /* ── Live panel resizer ── */
+  .live-resizer {
+    height: 5px;
+    background: var(--border);
+    cursor: ns-resize;
+    flex-shrink: 0;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .live-resizer::after { content: ''; position: absolute; inset: -3px 0; }
+  .live-resizer:hover,
+  .live-resizer.dragging { background: var(--accent2); }
 
   /* ── Main ── */
   main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
@@ -522,8 +533,17 @@
     padding: 10px 0;
     width: 32px;
     flex-shrink: 0;
+    cursor: pointer;
+    transition: background 0.2s;
   }
   .live-panel.collapsed .live-strip { display: flex; }
+  .live-strip:hover { background: rgba(79,168,197,0.10); }
+
+  @keyframes strip-flash {
+    0%   { background: rgba(79,168,197,0.55); }
+    100% { background: rgba(79,168,197,0.18); }
+  }
+  .live-strip.has-event { animation: strip-flash 3s ease-out forwards; }
 
   .live-content {
     display: flex;
@@ -670,8 +690,8 @@
   <aside id="sidebar">
 
     <!-- Collapsed strip -->
-    <div class="sidebar-strip">
-      <button class="strip-btn" onclick="toggleSidebarCollapse()" title="Expand panel">▶</button>
+    <div class="sidebar-strip" onclick="toggleSidebarCollapse()">
+      <button class="strip-btn" title="Expand panel">▶</button>
     </div>
 
     <!-- Main content -->
@@ -685,17 +705,6 @@
         </div>
         <div class="file-list" id="fileList">
           <div class="log-empty" style="height:60px;font-size:12px;">loading...</div>
-        </div>
-      </div>
-
-      <!-- Draggable resizer -->
-      <div class="sidebar-resizer" id="sidebarResizer"></div>
-
-      <!-- Switches section -->
-      <div class="sidebar-switches-section" id="sidebarSwitchesSection">
-        <div class="sidebar-label"><span>Switches</span></div>
-        <div class="switch-feed" id="switchFeed">
-          <div class="sw-empty">No active switches</div>
         </div>
       </div>
 
@@ -739,8 +748,8 @@
   <div class="live-panel" id="livePanel">
 
     <!-- Collapsed strip -->
-    <div class="live-strip">
-      <button class="strip-btn" onclick="toggleLiveCollapse()" title="Expand panel">◀</button>
+    <div class="live-strip" onclick="toggleLiveCollapse()">
+      <button class="strip-btn" title="Expand panel">◀</button>
     </div>
 
     <!-- Live content -->
@@ -750,9 +759,19 @@
         <span class="lh-title">Live Events</span>
         <span class="live-badge" id="liveBadge">0</span>
       </div>
-      <div class="live-feed" id="liveFeed">
-        <div class="live-empty">Waiting for events...</div>
+
+      <!-- Switches section -->
+      <div class="live-switches-section" id="liveSwitchesSection">
+        <div class="live-switches-label">Switches</div>
+        <div class="switch-feed" id="switchFeed">
+          <div class="sw-empty">No active switches</div>
+        </div>
       </div>
+
+      <!-- Resizer -->
+      <div class="live-resizer" id="liveResizer"></div>
+
+      <div class="live-feed" id="liveFeed"></div>
     </div>
 
   </div>
@@ -1110,7 +1129,12 @@ function toggleSidebarCollapse() {
 }
 
 function toggleLiveCollapse() {
-  document.getElementById('livePanel').classList.toggle('collapsed');
+  const panel = document.getElementById('livePanel');
+  panel.classList.toggle('collapsed');
+  if (!panel.classList.contains('collapsed')) {
+    // Panel opened — clear event flash
+    document.querySelector('#livePanel .live-strip').classList.remove('has-event');
+  }
 }
 
 // ── Mobile sidebar ──────────────────────────────────────────────
@@ -1123,11 +1147,11 @@ function closeMobileSidebar() {
   document.getElementById('sidebarOverlay').classList.remove('visible');
 }
 
-// ── Sidebar resizer (drag to split files/switches) ──────────────
+// ── Live panel resizer (drag to split switches/live feed) ────────
 (function() {
-  const resizer  = document.getElementById('sidebarResizer');
-  const switchSec = document.getElementById('sidebarSwitchesSection');
-  const sidebar   = document.getElementById('sidebar');
+  const resizer   = document.getElementById('liveResizer');
+  const switchSec = document.getElementById('liveSwitchesSection');
+  const livePanel = document.getElementById('livePanel');
   let dragging = false, startY = 0, startH = 0;
 
   resizer.addEventListener('mousedown', e => {
@@ -1141,9 +1165,8 @@ function closeMobileSidebar() {
 
   document.addEventListener('mousemove', e => {
     if (!dragging) return;
-    const sideH = sidebar.offsetHeight;
-    const delta = startY - e.clientY; // drag up = switches taller
-    const newH  = Math.max(60, Math.min(sideH - 100, startH + delta));
+    const delta = e.clientY - startY; // drag down = switches taller
+    const newH  = Math.max(40, Math.min(livePanel.offsetHeight - 80, startH + delta));
     switchSec.style.flex = `0 0 ${newH}px`;
   });
 
@@ -1358,13 +1381,25 @@ async function pollLive() {
     if (!newLines.length) return;
     newLines.forEach(l => livePrevSet.add(l));
 
-    const feed   = document.getElementById('liveFeed');
+    const feed = document.getElementById('liveFeed');
+    // Remove placeholder if present
+    const ph = feed.querySelector('.live-empty');
+    if (ph) ph.remove();
+
     const newEls = newLines.map(buildLiveLine);
     newEls.forEach(el => feed.prepend(el));
     while (feed.children.length > LIVE_MAX) feed.removeChild(feed.lastChild);
 
     startHighlights(newEls);
     updateStatus();
+
+    // Flash collapsed live strip when new events arrive
+    if (document.getElementById('livePanel').classList.contains('collapsed')) {
+      const strip = document.querySelector('#livePanel .live-strip');
+      strip.classList.remove('has-event');
+      void strip.offsetWidth; // restart animation
+      strip.classList.add('has-event');
+    }
 
     // Activate switch indicators for new messages
     newLines.forEach(l => activateSwitch(extractSwitchName(l)));
