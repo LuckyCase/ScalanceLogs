@@ -90,10 +90,20 @@ public partial class App : Application
         win.ShowDialog();
     }
 
+    // ── Custom WPF toast (replaces system balloon — no sound, no queue) ──
+    private ToastWindow? _toast;
+
     public void ShowBalloon(string title, string text, ToolTipIcon icon = ToolTipIcon.Info)
     {
         if (!Settings.BalloonNotifications) return;
-        _trayIcon?.ShowBalloonTip(4000, title, text, icon);
+
+        // Close any existing toast immediately — no queue
+        _toast?.CloseToast();
+
+        var isWarning = icon == ToolTipIcon.Warning || icon == ToolTipIcon.Error;
+        _toast        = new ToastWindow(title, text, isWarning);
+        _toast.Closed += (_, _) => { if (_toast is { } t && ReferenceEquals(t, _toast)) _toast = null; };
+        _toast.Show();
     }
 
     private static Icon CreateTrayIcon()

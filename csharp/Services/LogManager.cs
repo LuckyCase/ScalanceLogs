@@ -49,7 +49,9 @@ public static class LogManager
             if (!Writers.TryGetValue(key, out var writer))
             {
                 var path = Path.Combine(_logDir, filename);
-                writer = new StreamWriter(path, append: true, Encoding.UTF8) { AutoFlush = true };
+                var fs   = new FileStream(path, FileMode.Append, FileAccess.Write,
+                                          FileShare.ReadWrite, 4096, FileOptions.None);
+                writer = new StreamWriter(fs, Encoding.UTF8) { AutoFlush = true };
                 Writers[key] = writer;
             }
             writer.WriteLine(line);
@@ -67,9 +69,19 @@ public static class LogManager
         var path = Path.Combine(_logDir, Path.GetFileName(filename));
         try
         {
-            var all = File.ReadAllLines(path, Encoding.UTF8);
+            // Open with ReadWrite sharing so we can read while the StreamWriter has the file open
+            using var fs = new FileStream(path, FileMode.Open, FileAccess.Read,
+                                          FileShare.ReadWrite | FileShare.Delete);
+            using var sr = new StreamReader(fs, Encoding.UTF8);
+            var lines = new List<string>();
+            while (!sr.EndOfStream)
+            {
+                var line = sr.ReadLine();
+                if (line != null) lines.Add(line);
+            }
+            IEnumerable<string> all = lines;
             if (!string.IsNullOrEmpty(search))
-                all = all.Where(l => l.Contains(search, StringComparison.OrdinalIgnoreCase)).ToArray();
+                all = all.Where(l => l.Contains(search, StringComparison.OrdinalIgnoreCase));
             return all.TakeLast(count).ToArray();
         }
         catch { return []; }

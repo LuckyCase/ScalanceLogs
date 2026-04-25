@@ -7,6 +7,9 @@ public class AppSettings
     public string LogPath           { get; set; } = "logs";
     public bool   AutoStart         { get; set; } = false;
     public bool   BalloonNotifications { get; set; } = true;
+    // Labels that trigger balloon. Empty = ALL messages.
+    public List<string> BalloonLabels { get; set; } = ["EMERG", "ALERT", "CRIT", "ERROR",
+                                                        "LINK DOWN", "LINK UP"];
 
     public List<SwitchNameEntry>   SwitchNames   { get; set; } = [];
     public List<string>            EventPatterns { get; set; } = DefaultEventPatterns();

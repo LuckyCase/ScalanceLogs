@@ -114,11 +114,19 @@ public static class SyslogParser
             }
         }
 
-        // Split host into IP + suffix for clickable IP
+        // Split host into IP + suffix; validate IP before making it a clickable link
         string ipPart = "", hostSuffix = "";
         var ipM = Regex.Match(host, @"^(\d+\.\d+\.\d+\.\d+)(.*)");
-        if (ipM.Success) { ipPart = ipM.Groups[1].Value; hostSuffix = ipM.Groups[2].Value; }
-        else             { ipPart = host; }
+        if (ipM.Success && System.Net.IPAddress.TryParse(ipM.Groups[1].Value, out _))
+        {
+            ipPart     = ipM.Groups[1].Value;
+            hostSuffix = ipM.Groups[2].Value;
+        }
+        else
+        {
+            // Not a valid IP — show as plain text in hostSuffix, no clickable link
+            hostSuffix = host;
+        }
 
         return new LogEntry
         {

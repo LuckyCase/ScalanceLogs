@@ -1,0 +1,5 @@
+C:\Projects\ScalanceLogs\csharp\bin\Release\net9.0-windows\win-x64\publish\ScalanceLogs.exe
+C:\Projects\ScalanceLogs\csharp\bin\Release\net9.0-windows\win-x64\publish\ScalanceLogs.dll
+C:\Projects\ScalanceLogs\csharp\bin\Release\net9.0-windows\win-x64\publish\ScalanceLogs.deps.json
+C:\Projects\ScalanceLogs\csharp\bin\Release\net9.0-windows\win-x64\publish\ScalanceLogs.runtimeconfig.json
+C:\Projects\ScalanceLogs\csharp\bin\Release\net9.0-windows\win-x64\publish\ScalanceLogs.pdb

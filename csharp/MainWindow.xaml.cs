@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Navigation;
 using System.Windows.Threading;
 
@@ -19,13 +20,13 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<FileGroup> _fileGroups  = [];
 
     private string?  _currentFile;
-    private bool     _autoRefresh;
     private string   _activeQuickFilter = "";
+    private bool     _autoScroll;
 
-    private readonly DispatcherTimer _autoTimer = new() { Interval = TimeSpan.FromSeconds(5) };
-    private readonly DispatcherTimer _liveTimer = new() { Interval = TimeSpan.FromSeconds(1) };
+    private readonly DispatcherTimer _liveTimer   = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly DispatcherTimer _statusTimer = new() { Interval = TimeSpan.FromSeconds(1) };
-    private DateTime _lastUpdate = DateTime.MinValue;
+    private DateTime _lastUpdate      = DateTime.MinValue;
+    private DateTime _lastTreeRefresh = DateTime.MinValue;
 
     private const int LiveMax      = 100;
     private const int LiveFadeSec  = 30;
@@ -39,15 +40,15 @@ public partial class MainWindow : Window
         SwitchList.ItemsSource = _activeSw;
         FileTree.ItemsSource = _fileGroups;
 
-        _autoTimer.Tick  += (_, _) => LoadLog();
-        _liveTimer.Tick  += LiveTimer_Tick;
+        _liveTimer.Tick   += LiveTimer_Tick;
         _statusTimer.Tick += StatusTimer_Tick;
+        _liveTimer.Start();
         _statusTimer.Start();
 
         EventHub.MessageReceived += OnMessageReceived;
 
         Loaded  += (_, _) => { RefreshFileTree(); BuildQuickFilters(); };
-        Closing += (_, e) => { e.Cancel = true; Hide(); };
+        Closing += OnClosing;
     }
 
     // ── File tree ────────────────────────────────────────────────
@@ -80,6 +81,7 @@ public partial class MainWindow : Window
                 g.EventsFile = f;
                 continue;
             }
+            // Named switch: {ip}_{name}_{date}.log
             var swM = Regex.Match(f, @"^((?:\d+_){3}\d+)_(.+)_(\d{4}-\d{2}-\d{2})\.log$");
             if (swM.Success)
             {
@@ -87,6 +89,16 @@ public partial class MainWindow : Window
                 var name = swM.Groups[2].Value;
                 if (!map.TryGetValue(date, out var g)) map[date] = g = new FileGroup { Date = date };
                 g.Switches.Add(new FileItem { Display = name, FileName = f });
+                continue;
+            }
+            // IP-only (no name configured): {ip}_{date}.log
+            var ipM = Regex.Match(f, @"^((?:\d+_){3}\d+)_(\d{4}-\d{2}-\d{2})\.log$");
+            if (ipM.Success)
+            {
+                var date = ipM.Groups[2].Value;
+                var ip   = ipM.Groups[1].Value.Replace('_', '.');
+                if (!map.TryGetValue(date, out var g)) map[date] = g = new FileGroup { Date = date };
+                g.Switches.Add(new FileItem { Display = ip, FileName = f });
             }
         }
         return [.. map.Values];
@@ -151,6 +163,9 @@ public partial class MainWindow : Window
         StatUp.Text    = up.ToString();
 
         _lastUpdate = DateTime.Now;
+
+        if (_autoScroll)
+            (LogList.Template.FindName("LogScroll", LogList) as ScrollViewer)?.ScrollToTop();
     }
 
     // ── Live events ──────────────────────────────────────────────
@@ -165,23 +180,79 @@ public partial class MainWindow : Window
             while (_liveEntries.Count > LiveMax)
                 _liveEntries.RemoveAt(_liveEntries.Count - 1);
 
-            // Switch activity list
             if (!_activeSw.Contains(entry.SwitchName))
                 _activeSw.Insert(0, entry.SwitchName);
 
             LiveBadge.Text = _liveEntries.Count.ToString();
 
-            if (App.Settings.BalloonNotifications)
+            // ── Append directly to center (same moment as live panel) ──
+            AppendToCenter(msg);
+
+            // Refresh file tree at most once per 5 s (picks up new host files)
+            if ((DateTime.Now - _lastTreeRefresh).TotalSeconds >= 5)
             {
-                var sev = msg.Severity;
-                if (sev <= 3) // EMERG..ERROR
-                    ((App)Application.Current).ShowBalloon(entry.SwitchName, entry.Message,
-                        System.Windows.Forms.ToolTipIcon.Warning);
+                RefreshFileTree();
+                _lastTreeRefresh = DateTime.Now;
             }
 
-            if (_autoRefresh && _currentFile is not null)
-                LoadLog();
+            FlashLiveStrip();
+
+            if (App.Settings.BalloonNotifications)
+            {
+                var labels = App.Settings.BalloonLabels;
+                if (labels.Count == 0 ||
+                    labels.Contains(entry.ChipLabel, StringComparer.OrdinalIgnoreCase))
+                    ((App)Application.Current).ShowBalloon(entry.SwitchName, entry.Message,
+                        System.Windows.Forms.ToolTipIcon.Info);
+            }
         });
+    }
+
+    // ── Append incoming message directly to center panel ─────────
+    private void AppendToCenter(RawSyslogMessage msg)
+    {
+        if (_currentFile is null) return;
+
+        var filename = System.IO.Path.GetFileName(_currentFile);
+
+        // Events file — skip if message doesn't pass event filter
+        if (filename.StartsWith("events_"))
+        {
+            var patterns = App.Settings.EventPatterns;
+            if (patterns.Count > 0 &&
+                !patterns.Any(p => System.Text.RegularExpressions.Regex.IsMatch(
+                    msg.Message, p, RegexOptions.IgnoreCase)))
+                return;
+        }
+        else
+        {
+            // Switch-specific file — only messages from that IP
+            var safeIp = msg.SrcIp.Replace('.', '_');
+            if (!filename.StartsWith(safeIp)) return;
+        }
+
+        var entry = SyslogParser.BuildEntry(msg.Line);
+        if (entry is null) return;
+
+        _logEntries.Insert(0, entry);
+
+        // Trim to current line limit
+        var max = GetLineCount();
+        while (_logEntries.Count > max)
+            _logEntries.RemoveAt(_logEntries.Count - 1);
+
+        // Update stats incrementally
+        StatTotal.Text = _logEntries.Count.ToString();
+        var sev = entry.SeverityText.ToLowerInvariant();
+        if (sev is "error" or "crit" or "emerg" or "alert")
+            StatErr.Text = (int.TryParse(StatErr.Text, out var e) ? e + 1 : 1).ToString();
+        else if (sev == "warn")
+            StatWarn.Text = (int.TryParse(StatWarn.Text, out var w) ? w + 1 : 1).ToString();
+
+        _lastUpdate = DateTime.Now;
+
+        if (_autoScroll)
+            (LogList.Template.FindName("LogScroll", LogList) as ScrollViewer)?.ScrollToTop();
     }
 
     private void LiveTimer_Tick(object? sender, EventArgs e)
@@ -261,14 +332,12 @@ public partial class MainWindow : Window
         LoadLog();
     }
 
-    private void AutoBtn_Click(object sender, RoutedEventArgs e)
+    private void AutoScrollBtn_Click(object sender, RoutedEventArgs e)
     {
-        _autoRefresh = !_autoRefresh;
-        AutoBtn.Style = _autoRefresh
-            ? (Style)FindResource("ActiveBtn")
-            : (Style)FindResource("AccentBtn");
-        if (_autoRefresh) { _autoTimer.Start(); _liveTimer.Start(); }
-        else              { _autoTimer.Stop();  _liveTimer.Stop();  }
+        _autoScroll = !_autoScroll;
+        AutoScrollBtn.Style = _autoScroll
+            ? (Style)FindResource("AccentBtn")
+            : (Style)FindResource(typeof(Button));
     }
 
     private void SettingsBtn_Click(object sender, RoutedEventArgs e) =>
@@ -303,9 +372,62 @@ public partial class MainWindow : Window
         LiveCol.Width        = collapse ? new GridLength(28)   : new GridLength(270);
     }
 
+    // ── Flash live strip when collapsed and message arrives ───────
+    private ColorAnimation? _flashAnim;
+
+    private void FlashLiveStrip()
+    {
+        if (LiveFull.Visibility != Visibility.Collapsed) return;
+
+        // Fresh brush each time — avoids state conflicts when messages arrive rapidly
+        var brush = new SolidColorBrush(Color.FromArgb(90, 79, 168, 197));
+        LiveStrip.Background = brush;
+
+        var anim = new ColorAnimation
+        {
+            To             = Color.FromRgb(0x16, 0x1b, 0x26),
+            Duration       = TimeSpan.FromSeconds(1.2),
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut },
+            FillBehavior   = FillBehavior.Stop,  // release after completion
+        };
+
+        // Only the last animation clears the background
+        var thisAnim = anim;
+        anim.Completed += (_, _) =>
+        {
+            if (ReferenceEquals(_flashAnim, thisAnim))
+                LiveStrip.ClearValue(Border.BackgroundProperty);
+        };
+        _flashAnim = anim;
+        brush.BeginAnimation(SolidColorBrush.ColorProperty, anim);
+    }
+
+    // ── Close → minimize to tray (show hint once) ────────────────
+    private bool _trayHintShown;
+
+    private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        e.Cancel = true;
+        Hide();
+        if (!_trayHintShown)
+        {
+            _trayHintShown = true;
+            ((App)Application.Current).ShowBalloon(
+                "Running in tray",
+                "Use tray → Exit to quit.",
+                System.Windows.Forms.ToolTipIcon.Info);
+        }
+    }
+
+    // ── Hyperlink: only open validated https://IP links ──────────
     private void Hyperlink_Navigate(object sender, RequestNavigateEventArgs e)
     {
-        Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
+        var uri = e.Uri;
+        if (uri.Scheme == Uri.UriSchemeHttps &&
+            System.Net.IPAddress.TryParse(uri.Host, out _))
+        {
+            Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
+        }
         e.Handled = true;
     }
 

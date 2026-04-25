@@ -74,12 +74,11 @@ public class SyslogCollector
         var fileBase = (name != srcIp) ? $"{safeIp}_{name}" : safeIp;
         LogManager.Write($"host_{fileBase}_{today}", $"{fileBase}_{today}.log", line);
 
+        var msg = new RawSyslogMessage(ts, srcIp, label, severity, message, line);
+        EventHub.Publish(msg);
+
         if (IsEvent(message))
-        {
             LogManager.Write($"events_{today}", $"events_{today}.log", line);
-            var msg = new RawSyslogMessage(ts, srcIp, label, severity, message, line);
-            EventHub.Publish(msg);
-        }
     }
 
     private static bool IsEvent(string message)

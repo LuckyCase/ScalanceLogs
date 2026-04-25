@@ -64,7 +64,24 @@
                             </ComboBox>
                         </Grid>
 
-                        <Separator Margin="0 4 0 16"/>
+                        <!-- Test packet -->
+                        <Grid Margin="0 8 0 0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="180"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Grid.Column="0" Content="Test packet"
+                                   VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Content="Send" Width="70"
+                                    Click="TestPacket_Click"/>
+                            <TextBlock x:Name="TestStatus" Grid.Column="2"
+                                       FontFamily="Consolas" FontSize="11"
+                                       VerticalAlignment="Center" Margin="10 0 0 0"
+                                       Foreground="{StaticResource TextDimBrush}"/>
+                        </Grid>
+
+                        <Separator Margin="0 12 0 16"/>
                         <TextBlock Text="LOGS" Style="{StaticResource SectionHeader}"/>
 
                         <Grid Margin="0 0 0 8">
@@ -102,7 +119,42 @@
                         <CheckBox x:Name="AutoStartCheck" Content="Start with Windows"
                                   Margin="0 0 0 8"/>
                         <CheckBox x:Name="BalloonCheck"
-                                  Content="Balloon notifications for errors (EMERG–ERROR)"/>
+                                  Content="Balloon notifications"
+                                  Margin="0 0 0 6"
+                                  Checked="BalloonCheck_Changed"
+                                  Unchecked="BalloonCheck_Changed"/>
+
+                        <!-- Triggers panel — shown only when BalloonCheck is on -->
+                        <Border x:Name="BalloonTriggers" Margin="20 0 0 0" Visibility="Collapsed">
+                            <StackPanel>
+                                <CheckBox x:Name="BalloonAllCheck"
+                                          Content="All messages"
+                                          Margin="0 0 0 6"
+                                          Checked="BalloonAllCheck_Changed"
+                                          Unchecked="BalloonAllCheck_Changed"/>
+                                <ListBox x:Name="BalloonLabelList"
+                                         MaxHeight="150"
+                                         BorderThickness="1"
+                                         BorderBrush="{StaticResource BorderBrush}"
+                                         Background="{StaticResource BgBrush}">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Padding" Value="2 1"/>
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <CheckBox Content="{Binding Label}"
+                                                      IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                                      Foreground="{StaticResource TextBrush}"
+                                                      FontFamily="Consolas" FontSize="12"/>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </StackPanel>
+                        </Border>
 
                     </StackPanel>
                 </ScrollViewer>
