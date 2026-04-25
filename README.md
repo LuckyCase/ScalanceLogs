@@ -1,240 +1,121 @@
-# Industrial Syslog Collector
+# ScalanceLogs — Syslog Viewer
 
-Collects UDP Syslog from Siemens Scalance XC-200 switches, writes per-switch log files, and provides a browser-based log viewer.
-
-## Overview
+WPF desktop application for collecting and viewing UDP syslog from Siemens Scalance XC-200 industrial switches.
 
 ```
-Scalance XC-200  ──UDP 514──►  collector  ──►  logs/
-                                                  │
-Browser  ◄──HTTP 8080──  viewer_server  ◄─────────┘
-```
-
-Two independent processes:
-- **Collector** — listens for syslog UDP packets, writes log files
-- **Viewer** — HTTP server serving the web UI and log API
-
-Available in two implementations — choose either, they are fully compatible and share the same `logs/` folder and `viewer.html`.
-
-## Project Structure
-
-```
-ScalanceLogs/
-├── python/
-│   ├── config.py                  # Python configuration
-│   ├── scalance_collector.py      # UDP syslog collector
-│   └── viewer_server.py           # HTTP log viewer server
-├── powershell/
-│   ├── config.ps1                 # PowerShell configuration
-│   ├── scalance_collector.ps1     # UDP syslog collector
-│   └── viewer_server.ps1          # HTTP log viewer server
-├── viewer.html                    # Web UI (shared by both implementations)
-└── logs/                          # Log files (shared by both implementations)
+Scalance XC-200  ──UDP 514──►  ScalanceLogs.exe  ──►  logs\
+                                      │
+                               System tray + WPF UI
 ```
 
 ---
 
-## Python
+## Requirements
 
-### Requirements
-
-- Python 3.9+
-- Administrator rights (for UDP port 514)
-
-### Quick Start
-
-**1. Configure** — edit `python/config.py`:
-
-```python
-SWITCH_NAMES = {
-    "192.168.1.10": "SW-Panel-A",
-    "192.168.1.11": "SW-Panel-B",
-}
-```
-
-**2. Start collector** (as Administrator)
-
-```
-python python/scalance_collector.py
-```
-
-**3. Start viewer** (separate window)
-
-```
-python python/viewer_server.py
-```
+- Windows 10 / 11
+- .NET 9 Runtime ([download](https://dotnet.microsoft.com/download/dotnet/9))
+- Administrator rights if using UDP port 514 (not needed for port 5140)
 
 ---
 
-## PowerShell
+## Quick Start
 
-### Requirements
+1. Run `ScalanceLogs.exe`
+2. Open **Settings → General** — set UDP port and log folder
+3. Open **Settings → Switches** — add switch IPs and names
+4. Configure the switch WBM to send syslog to this PC (see below)
+5. Messages appear in the live panel and center log view in real time
 
-- PowerShell 5.1+
-- Administrator rights (for UDP port 514)
-
-### Quick Start
-
-**1. Configure** — edit `powershell/config.ps1`:
-
-```powershell
-$SWITCH_NAMES = @{
-    "192.168.1.10" = "SW-Panel-A"
-    "192.168.1.11" = "SW-Panel-B"
-}
-```
-
-**2. Start collector** (as Administrator)
-
-```
-powershell -ExecutionPolicy Bypass -File powershell/scalance_collector.ps1
-```
-
-**3. Start viewer** (separate window)
-
-```
-powershell -ExecutionPolicy Bypass -File powershell/viewer_server.ps1
-```
+The app minimizes to the system tray on close. Use tray → **Exit** to quit.
 
 ---
 
-## Open the Viewer
+## UI Layout
 
 ```
-http://localhost:8080
+┌─────────────────────────────────────────────────────────────────┐
+│  Toolbar: Search │ Quick Filters │ Line count │ Refresh │ Settings │
+├──────────┬──────────────────────────────────┬───────────────────┤
+│          │  Timestamp  Severity  Host  Msg  │  LIVE EVENTS      │
+│ LOG FILES│  ...                             │  SWITCHES         │
+│          │  ...                             │  ...              │
+│ 2026-04-25│ ...                             │                   │
+│  events  │                                  │                   │
+│  SW-01   │                                  │                   │
+└──────────┴──────────────────────────────────┴───────────────────┘
+│ footer: selected file                                      status │
 ```
+
+- **Left sidebar** — log files grouped by date; click to load into center panel
+- **Center panel** — log entries with severity chip, host, message; click `▸` to expand raw line
+- **Right panel** — live feed of incoming messages with fade-out; active switches list
+- Both side panels are collapsible; the live panel flashes when a message arrives while collapsed
 
 ---
 
-## Configuration
+## Settings
 
-### Switch Names
+All settings are stored in `%APPDATA%\ScalanceLogs\settings.json` and configured through the UI.
 
-Maps source IP addresses to friendly names shown in the viewer and written to log files.
+### General
 
-```python
-# Python (config.py)
-SWITCH_NAMES = {
-    "192.168.1.10": "SW-Panel-A",
-    "192.168.1.11": "SW-Panel-B",
-}
-```
+| Setting | Description |
+|---|---|
+| UDP Port | Port to listen on. 514 = standard (needs admin). 5140 = unprivileged. |
+| Retention (days) | Log files older than this are deleted automatically |
+| Log folder | Where `.log` files are written. Relative path = next to exe; absolute path supported |
+| Start with Windows | Adds / removes registry autostart entry |
+| Balloon notifications | Show toast notification on new messages; configurable per severity label |
 
-```powershell
-# PowerShell (config.ps1)
-$SWITCH_NAMES = @{
-    "192.168.1.10" = "SW-Panel-A"
-    "192.168.1.11" = "SW-Panel-B"
-}
-```
+**Test packet** — sends a test UDP syslog to the configured port to verify the collector is running.
 
-If empty — only IP addresses are written to logs. All sources are accepted.
+### Switches
+
+Maps source IP addresses to friendly names. The name appears in log filenames and the UI host column.
+
+If a switch IP is not listed — messages are still collected using the raw IP as the name.
 
 ### Event Filters
 
-Messages matching any pattern are written to `events_YYYY-MM-DD.log`. The events log is the default view in the web UI.
+Regex patterns. Messages matching **any** pattern are written to `events_YYYY-MM-DD.log`.  
+If the list is empty — **all** messages go to the events log.
 
-```python
-# Python (config.py)
-EVENT_PATTERNS = [
-    re.compile(r"(?i)link\s+(up|down)"),
-    re.compile(r"(?i)(fault|error|fail)"),
-]
-# Empty list = write ALL messages to events log
-```
+### Message Types
 
-```powershell
-# PowerShell (config.ps1)
-$EVENT_PATTERNS = @(
-    "(?i)link\s+(up|down)",
-    "(?i)(fault|error|fail)"
-)
-# Empty array = write ALL messages to events log
-```
+Custom severity chip label and color, matched against message text (first match wins).  
+Useful for distinguishing `LINK DOWN` / `LINK UP` / `FAULT` visually.
 
-### Message Type Overrides *(Python only)*
+| Column | Description |
+|---|---|
+| Pattern (regex) | Matched against the message text |
+| Label | Text shown in the severity chip |
+| Color | Chip text color (`#rrggbb` or `rgba(...)`) |
+| Background | Chip and row background color |
 
-Custom labels and colors for the severity chip in the viewer, matched against the message text:
+### Quick Filters
 
-```python
-# Python (config.py)
-MESSAGE_TYPES = [
-    {
-        "pattern": re.compile(r"(?i)link\s+down"),
-        "label":   "LINK DOWN",
-        "color":   "#ff6b6b",
-        "bg":      "rgba(255,107,107,0.15)",
-    },
-    ...
-]
-```
-
-### Quick Filters *(Python only)*
-
-Shortcut buttons shown in the viewer toolbar:
-
-```python
-# Python (config.py)
-QUICK_FILTERS = [
-    {"label": "Link",   "query": "link"},
-    {"label": "NTP",    "query": "ntp"},
-]
-```
-
-### Log Directory
-
-```python
-# Python — relative to project root by default
-LOG_DIR = str(_ROOT / "logs")
-# or absolute:
-LOG_DIR = r"C:\Logs\SW-Log"
-```
-
-```powershell
-# PowerShell — relative to project root by default
-$LOG_DIR = Join-Path $SCRIPT_ROOT "logs"
-# or absolute:
-$LOG_DIR = "C:\Logs\SW-Log"
-```
-
-### Port 514
-
-Requires Administrator. To run without elevated rights change to `5140` in config and in the switch WBM → System → Syslog → Port.
+Buttons shown in the toolbar for one-click search. Label = button text, Query = search string.
 
 ---
 
 ## Log Files
 
-Files are created daily in `logs/`:
+Written to the configured log folder, one file per switch per day:
 
 ```
-logs/
-├── events_2026-04-18.log                        # filtered events, all switches
-├── 192_168_1_10_SW-Panel-A_2026-04-18.log       # all messages, per switch
-├── 192_168_1_11_SW-Panel-B_2026-04-18.log
-└── unknown_sources.log                          # rejected packets from unlisted IPs
+logs\
+├── events_2026-04-25.log                         # filtered events, all switches
+├── 192_168_1_10_SW-Panel-A_2026-04-25.log        # all messages, per switch (named)
+├── 192_168_1_11_2026-04-25.log                   # all messages, per switch (no name configured)
+└── ...
 ```
 
 Log line format:
 ```
-2026-04-18 10:23:01 [INFO  ] 192.168.1.10 (SW-Panel-A) | <134>1 2000-01-08T09:23:01+00:00 ... Link up on P0.3.
+2026-04-25 10:23:01 [NOTICE] 192.168.1.10 (SW-Panel-A) | Link up on port P0.3
 ```
 
-Files older than `LOG_ROTATE_DAYS` (default: 30) are deleted automatically at startup and daily at midnight.
-
----
-
-## Viewer Features
-
-- **Log files panel** — grouped by date; events file is the default, individual switch files expandable under it
-- **Switches panel** — live indicator of which switches are sending messages; entries appear, fade, and disappear
-- **Live events panel** — new messages appear with highlight animation as they arrive
-- **Message detail** — click `▸` on any row to expand the full raw syslog line
-- **Quick filters** — one-click filter buttons defined in `config.py`
-- **Search** — filter by any text (Enter or Refresh)
-- **Auto-refresh** — polls every 5 seconds when enabled
-- **Collapsible panels** — left sidebar and right live panel can be collapsed to save space
-- **Status indicator** — shows time since last new event; turns yellow if stale
+Old files are deleted automatically on startup and daily at midnight.
 
 ---
 
@@ -242,32 +123,44 @@ Files older than `LOG_ROTATE_DAYS` (default: 30) are deleted automatically at st
 
 ```
 System → Time → SNTP Client
-  Server Address: <IP of this PC>
+  Server Address:  <IP of this PC>
 
 System → Syslog
-  Server Address: <IP of this PC>
-  Port:           514  (or 5140 if not running as Administrator)
-  Severity:       Informational (or higher)
+  Server Address:  <IP of this PC>
+  Port:            514   (or 5140 if not running as Administrator)
+  Severity:        Informational
 ```
 
 ---
 
 ## Security
 
-### IP Whitelist
+- **IP hyperlinks** — host column shows the source IP as a clickable link (`https://<ip>`).  
+  Only valid IPv4 addresses are made clickable; any other host string is shown as plain text.  
+  The click handler validates the scheme is `https` and the host parses as an IP before opening a browser — crafted syslog messages cannot trigger arbitrary URLs or commands.
 
-The collector accepts syslog packets **only from IPs listed in `SWITCH_NAMES`**. Packets from unlisted sources are rejected and logged to `logs/unknown_sources.log`.
+- **Network** — the UDP listener accepts packets from any source (no IP whitelist in the current version).  
+  Bind to a specific interface if the host has multiple NICs and exposure is a concern.
 
-If `SWITCH_NAMES` is empty — all sources are accepted (useful during initial setup).
+---
 
-### XSS Protection
+## Building from Source
 
-All syslog message content is HTML-escaped before rendering. Injected HTML from malicious packets is displayed as plain text and never executed.
+```
+dotnet build csharp -c Release
+```
 
-### Network Exposure
+Output: `csharp\bin\Release\net9.0-windows\`
 
-- **Collector** (UDP 514/5140) — accessible from the local network. Only listed IPs are accepted.
-- **Viewer** (HTTP 8080) — binds to `localhost` only by default. Not reachable from the network.
+Requires .NET 9 SDK.
+
+---
+
+## Legacy Implementations
+
+The `python\` and `powershell\` folders contain earlier collector + HTTP viewer implementations.  
+They write the same log file format and can share the same `logs\` folder with the C# app.  
+The C# WPF app supersedes them for day-to-day use.
 
 ---
 
