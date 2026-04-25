@@ -37,7 +37,14 @@
       "Bash(copy /Y \"C:\\\\Projects\\\\ScalanceLogs\\\\viewer.html\" \"C:\\\\Projects\\\\ScalanceLogs\\\\python\\\\viewer.html\")",
       "Bash(copy /Y \"C:\\\\Projects\\\\ScalanceLogs\\\\viewer.html\" \"C:\\\\Projects\\\\ScalanceLogs\\\\powershell\\\\viewer.html\")",
       "PowerShell(Copy-Item \"C:\\\\Projects\\\\ScalanceLogs\\\\viewer.html\" \"C:\\\\Projects\\\\ScalanceLogs\\\\python\\\\viewer.html\" -Force)",
-      "PowerShell(Copy-Item \"C:\\\\Projects\\\\ScalanceLogs\\\\viewer.html\" \"C:\\\\Projects\\\\ScalanceLogs\\\\powershell\\\\viewer.html\" -Force)"
+      "PowerShell(Copy-Item \"C:\\\\Projects\\\\ScalanceLogs\\\\viewer.html\" \"C:\\\\Projects\\\\ScalanceLogs\\\\powershell\\\\viewer.html\" -Force)",
+      "Bash(dotnet build *)",
+      "Bash(where dotnet *)",
+      "Read(//c/Program Files/dotnet/**)",
+      "Bash(\"/c/Program Files/dotnet/dotnet.exe\" --list-sdks)",
+      "Bash(\"/c/Program Files/dotnet/dotnet.exe\" build -c Release)",
+      "PowerShell(Get-Command dotnet -ErrorAction SilentlyContinue)",
+      "PowerShell(& \"C:\\\\Program Files\\\\dotnet\\\\dotnet.exe\" build C:\\\\Projects\\\\ScalanceLogs\\\\csharp\\\\ScalanceLogs.csproj -c Release 2>&1)"
     ]
   }
 }

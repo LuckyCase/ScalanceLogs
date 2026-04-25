@@ -1,0 +1,215 @@
+<Window x:Class="ScalanceLogs.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Settings — ScalanceLogs" Height="560" Width="680"
+        MinHeight="480" MinWidth="560"
+        Background="{StaticResource BgBrush}"
+        Foreground="{StaticResource TextBrush}"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResizeWithGrip">
+
+    <Window.Resources>
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize"   Value="10"/>
+            <Setter Property="Foreground" Value="{StaticResource TextDimBrush}"/>
+            <Setter Property="Margin"     Value="0 0 0 10"/>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel>
+
+        <!-- ── Tab area ──────────────────��────────────────────── -->
+        <Border DockPanel.Dock="Bottom"
+                Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="0 1 0 0" Padding="12 10">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Cancel" Width="80" Margin="0 0 8 0" Click="Cancel_Click"/>
+                <Button Content="OK" Width="80"
+                        Style="{StaticResource AccentBtn}" Click="Ok_Click"/>
+            </StackPanel>
+        </Border>
+
+        <TabControl Margin="0">
+
+            <!-- ══ General ═══════════════════���══════════════════ -->
+            <TabItem Header="General">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="24 20" MaxWidth="480">
+
+                        <TextBlock Text="NETWORK" Style="{StaticResource SectionHeader}"/>
+
+                        <Grid Margin="0 0 0 16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="180"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="8"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Label Grid.Row="0" Grid.Column="0" Content="UDP Port"
+                                   VerticalAlignment="Center"/>
+                            <TextBox x:Name="PortBox" Grid.Row="0" Grid.Column="1"
+                                     ToolTip="514 = standard (needs admin). 5140 = unprivileged."/>
+
+                            <Label Grid.Row="2" Grid.Column="0" Content="Protocol"
+                                   VerticalAlignment="Center"/>
+                            <ComboBox x:Name="ProtocolBox" Grid.Row="2" Grid.Column="1">
+                                <ComboBoxItem Content="UDP" IsSelected="True"/>
+                                <ComboBoxItem Content="TCP (future)" IsEnabled="False"/>
+                            </ComboBox>
+                        </Grid>
+
+                        <Separator Margin="0 4 0 16"/>
+                        <TextBlock Text="LOGS" Style="{StaticResource SectionHeader}"/>
+
+                        <Grid Margin="0 0 0 8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="180"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="8"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Label Grid.Row="0" Grid.Column="0" Content="Retention (days)"
+                                   VerticalAlignment="Center"/>
+                            <TextBox x:Name="RetentionBox" Grid.Row="0" Grid.Column="1"/>
+
+                            <Label Grid.Row="2" Grid.Column="0" Content="Log folder"
+                                   VerticalAlignment="Center"/>
+                            <Grid Grid.Row="2" Grid.Column="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="6"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="LogPathBox" Grid.Column="0"/>
+                                <Button Grid.Column="2" Content="…" Width="30" Padding="0"
+                                        Click="BrowseLog_Click"/>
+                            </Grid>
+                        </Grid>
+
+                        <Separator Margin="0 12 0 16"/>
+                        <TextBlock Text="APPLICATION" Style="{StaticResource SectionHeader}"/>
+
+                        <CheckBox x:Name="AutoStartCheck" Content="Start with Windows"
+                                  Margin="0 0 0 8"/>
+                        <CheckBox x:Name="BalloonCheck"
+                                  Content="Balloon notifications for errors (EMERG–ERROR)"/>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ══ Switches ══════════════════��═══════════════════ -->
+            <TabItem Header="Switches">
+                <DockPanel Margin="16">
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
+                                Margin="0 8 0 0">
+                        <Button Content="+ Add"    Width="70" Margin="0 0 6 0" Click="AddSwitch_Click"/>
+                        <Button Content="− Remove" Width="70" Click="RemoveSwitch_Click"/>
+                    </StackPanel>
+                    <TextBlock DockPanel.Dock="Top" Margin="0 0 0 8"
+                               Text="IP address → friendly name shown in log viewer"
+                               FontFamily="Consolas" FontSize="11"
+                               Foreground="{StaticResource TextDimBrush}"/>
+                    <DataGrid x:Name="SwitchGrid"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False" CanUserDeleteRows="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="IP Address" Binding="{Binding Ip}"   Width="160"/>
+                            <DataGridTextColumn Header="Name"       Binding="{Binding Name}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <!-- ══ Event Filters ═════════════════���════════════════ -->
+            <TabItem Header="Event Filters">
+                <DockPanel Margin="16">
+                    <StackPanel DockPanel.Dock="Bottom" Margin="0 8 0 0">
+                        <TextBlock Text="Add pattern (regex):"
+                                   FontFamily="Consolas" FontSize="11"
+                                   Foreground="{StaticResource TextDimBrush}" Margin="0 0 0 4"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="6"/>
+                                <ColumnDefinition Width="60"/>
+                                <ColumnDefinition Width="6"/>
+                                <ColumnDefinition Width="70"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="NewPatternBox" Grid.Column="0"
+                                     KeyDown="NewPattern_KeyDown"/>
+                            <Button Grid.Column="2" Content="Add"   Click="AddPattern_Click"/>
+                            <Button Grid.Column="4" Content="Remove" Click="RemovePattern_Click"/>
+                        </Grid>
+                    </StackPanel>
+                    <TextBlock DockPanel.Dock="Top" Margin="0 0 0 8"
+                               Text="Messages matching ANY pattern are saved to events.log (empty = all)"
+                               FontFamily="Consolas" FontSize="11"
+                               Foreground="{StaticResource TextDimBrush}"/>
+                    <ListBox x:Name="PatternList"/>
+                </DockPanel>
+            </TabItem>
+
+            <!-- ══ Message Types ══════════════════════════════════ -->
+            <TabItem Header="Message Types">
+                <DockPanel Margin="16">
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
+                                Margin="0 8 0 0">
+                        <Button Content="+ Add"    Width="70" Margin="0 0 6 0" Click="AddMsgType_Click"/>
+                        <Button Content="− Remove" Width="70" Click="RemoveMsgType_Click"/>
+                    </StackPanel>
+                    <TextBlock DockPanel.Dock="Top" Margin="0 0 0 8"
+                               Text="First matching pattern overrides severity chip colour"
+                               FontFamily="Consolas" FontSize="11"
+                               Foreground="{StaticResource TextDimBrush}"/>
+                    <DataGrid x:Name="MsgTypeGrid"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False" CanUserDeleteRows="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Pattern (regex)" Binding="{Binding Pattern}" Width="*"/>
+                            <DataGridTextColumn Header="Label"           Binding="{Binding Label}"   Width="90"/>
+                            <DataGridTextColumn Header="Color"           Binding="{Binding Color}"   Width="80"/>
+                            <DataGridTextColumn Header="Background"      Binding="{Binding Bg}"      Width="180"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <!-- ══ Quick Filters ══════════════════════════════════ -->
+            <TabItem Header="Quick Filters">
+                <DockPanel Margin="16">
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
+                                Margin="0 8 0 0">
+                        <Button Content="+ Add"    Width="70" Margin="0 0 6 0" Click="AddQF_Click"/>
+                        <Button Content="− Remove" Width="70" Click="RemoveQF_Click"/>
+                    </StackPanel>
+                    <TextBlock DockPanel.Dock="Top" Margin="0 0 0 8"
+                               Text="Buttons shown in toolbar for one-click search"
+                               FontFamily="Consolas" FontSize="11"
+                               Foreground="{StaticResource TextDimBrush}"/>
+                    <DataGrid x:Name="QFGrid"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False" CanUserDeleteRows="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Button label" Binding="{Binding Label}" Width="140"/>
+                            <DataGridTextColumn Header="Search query" Binding="{Binding Query}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+        </TabControl>
+    </DockPanel>
+
+
+</Window>
