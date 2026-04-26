@@ -30,6 +30,7 @@ public partial class App : Application
         base.OnStartup(e);
 
         Settings = SettingsService.Load();
+        ThemeManager.Apply(Settings.Theme);
         LogManager.Initialize();
 
         SetupTrayIcon();
@@ -37,6 +38,7 @@ public partial class App : Application
 
         var main = new MainWindow();
         MainWindow = main;
+        main.Icon = IconHelper.CreateBrandBitmapSource(32);
         main.Show();
     }
 
@@ -106,19 +108,7 @@ public partial class App : Application
         _toast.Show();
     }
 
-    private static Icon CreateTrayIcon()
-    {
-        using var bmp = new Bitmap(16, 16);
-        using var g   = Graphics.FromImage(bmp);
-        g.Clear(System.Drawing.Color.Transparent);
-        // Accent-coloured square with inner grid pattern
-        var accent = System.Drawing.Color.FromArgb(79, 168, 197);
-        var dark   = System.Drawing.Color.FromArgb(45, 106, 130);
-        g.FillRectangle(new SolidBrush(accent), 1, 1, 14, 14);
-        g.FillRectangle(new SolidBrush(dark),   1, 1, 6,  6);
-        g.FillRectangle(new SolidBrush(dark),   9, 9, 6,  6);
-        return Icon.FromHandle(bmp.GetHicon());
-    }
+    private static Icon CreateTrayIcon() => IconHelper.CreateBrandIcon(16);
 
     private void ExitApp()
     {

@@ -1,10 +1,11 @@
 <Window x:Class="ScalanceLogs.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:ScalanceLogs"
         Title="Settings — ScalanceLogs" Height="560" Width="680"
         MinHeight="480" MinWidth="560"
-        Background="{StaticResource BgBrush}"
-        Foreground="{StaticResource TextBrush}"
+        Background="{DynamicResource BgBrush}"
+        Foreground="{DynamicResource TextBrush}"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResizeWithGrip">
 
@@ -12,7 +13,7 @@
         <Style x:Key="SectionHeader" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="Consolas"/>
             <Setter Property="FontSize"   Value="10"/>
-            <Setter Property="Foreground" Value="{StaticResource TextDimBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
             <Setter Property="Margin"     Value="0 0 0 10"/>
         </Style>
     </Window.Resources>
@@ -21,11 +22,12 @@
 
         <!-- ── Tab area ──────────────────��────────────────────── -->
         <Border DockPanel.Dock="Bottom"
-                Background="{StaticResource SurfaceBrush}"
-                BorderBrush="{StaticResource BorderBrush}"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0 1 0 0" Padding="12 10">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="Cancel" Width="80" Margin="0 0 8 0" Click="Cancel_Click"/>
+                <Button Content="Apply"  Width="80" Margin="0 0 8 0" Click="Apply_Click"/>
                 <Button Content="OK" Width="80"
                         Style="{StaticResource AccentBtn}" Click="Ok_Click"/>
             </StackPanel>
@@ -78,7 +80,7 @@
                             <TextBlock x:Name="TestStatus" Grid.Column="2"
                                        FontFamily="Consolas" FontSize="11"
                                        VerticalAlignment="Center" Margin="10 0 0 0"
-                                       Foreground="{StaticResource TextDimBrush}"/>
+                                       Foreground="{DynamicResource TextDimBrush}"/>
                         </Grid>
 
                         <Separator Margin="0 12 0 16"/>
@@ -135,8 +137,8 @@
                                 <ListBox x:Name="BalloonLabelList"
                                          MaxHeight="150"
                                          BorderThickness="1"
-                                         BorderBrush="{StaticResource BorderBrush}"
-                                         Background="{StaticResource BgBrush}">
+                                         BorderBrush="{DynamicResource BorderBrush}"
+                                         Background="{DynamicResource BgBrush}">
                                     <ListBox.ItemContainerStyle>
                                         <Style TargetType="ListBoxItem">
                                             <Setter Property="Padding" Value="2 1"/>
@@ -148,7 +150,7 @@
                                         <DataTemplate>
                                             <CheckBox Content="{Binding Label}"
                                                       IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                                                      Foreground="{StaticResource TextBrush}"
+                                                      Foreground="{DynamicResource TextBrush}"
                                                       FontFamily="Consolas" FontSize="12"/>
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
@@ -171,7 +173,7 @@
                     <TextBlock DockPanel.Dock="Top" Margin="0 0 0 8"
                                Text="IP address → friendly name shown in log viewer"
                                FontFamily="Consolas" FontSize="11"
-                               Foreground="{StaticResource TextDimBrush}"/>
+                               Foreground="{DynamicResource TextDimBrush}"/>
                     <DataGrid x:Name="SwitchGrid"
                               AutoGenerateColumns="False"
                               CanUserAddRows="False" CanUserDeleteRows="False">
@@ -189,7 +191,7 @@
                     <StackPanel DockPanel.Dock="Bottom" Margin="0 8 0 0">
                         <TextBlock Text="Add pattern (regex):"
                                    FontFamily="Consolas" FontSize="11"
-                                   Foreground="{StaticResource TextDimBrush}" Margin="0 0 0 4"/>
+                                   Foreground="{DynamicResource TextDimBrush}" Margin="0 0 0 4"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -207,7 +209,7 @@
                     <TextBlock DockPanel.Dock="Top" Margin="0 0 0 8"
                                Text="Messages matching ANY pattern are saved to events.log (empty = all)"
                                FontFamily="Consolas" FontSize="11"
-                               Foreground="{StaticResource TextDimBrush}"/>
+                               Foreground="{DynamicResource TextDimBrush}"/>
                     <ListBox x:Name="PatternList"/>
                 </DockPanel>
             </TabItem>
@@ -223,15 +225,54 @@
                     <TextBlock DockPanel.Dock="Top" Margin="0 0 0 8"
                                Text="First matching pattern overrides severity chip colour"
                                FontFamily="Consolas" FontSize="11"
-                               Foreground="{StaticResource TextDimBrush}"/>
+                               Foreground="{DynamicResource TextDimBrush}"/>
                     <DataGrid x:Name="MsgTypeGrid"
                               AutoGenerateColumns="False"
                               CanUserAddRows="False" CanUserDeleteRows="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Pattern (regex)" Binding="{Binding Pattern}" Width="*"/>
-                            <DataGridTextColumn Header="Label"           Binding="{Binding Label}"   Width="90"/>
-                            <DataGridTextColumn Header="Color"           Binding="{Binding Color}"   Width="80"/>
-                            <DataGridTextColumn Header="Background"      Binding="{Binding Bg}"      Width="180"/>
+                            <DataGridTextColumn Header="Label"           Binding="{Binding Label}"   Width="80"/>
+
+                            <!-- Color chip (fg) — click to pick -->
+                            <DataGridTemplateColumn Header="Color" Width="110" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Click="PickChipColor_Click"
+                                                Background="Transparent" BorderThickness="0"
+                                                Padding="4 2" HorizontalAlignment="Left" Cursor="Hand">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Border Width="16" Height="16" CornerRadius="3"
+                                                        Margin="0 0 5 0"
+                                                        BorderBrush="{DynamicResource MutedBrush}" BorderThickness="1"
+                                                        Background="{Binding Color, Converter={StaticResource HexToBrush}}"/>
+                                                <TextBlock Text="{Binding Color}" FontFamily="Consolas" FontSize="11"
+                                                           Foreground="{DynamicResource TextBrush}"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Background (bg) — click to pick -->
+                            <DataGridTemplateColumn Header="Background" Width="150" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Click="PickChipBg_Click"
+                                                Background="Transparent" BorderThickness="0"
+                                                Padding="4 2" HorizontalAlignment="Left" Cursor="Hand">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Border Width="16" Height="16" CornerRadius="3"
+                                                        Margin="0 0 5 0"
+                                                        BorderBrush="{DynamicResource MutedBrush}" BorderThickness="1"
+                                                        Background="{Binding Bg, Converter={StaticResource HexToBrush}}"/>
+                                                <TextBlock Text="{Binding Bg}" FontFamily="Consolas" FontSize="10"
+                                                           Foreground="{DynamicResource TextBrush}"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </DockPanel>
@@ -248,7 +289,7 @@
                     <TextBlock DockPanel.Dock="Top" Margin="0 0 0 8"
                                Text="Buttons shown in toolbar for one-click search"
                                FontFamily="Consolas" FontSize="11"
-                               Foreground="{StaticResource TextDimBrush}"/>
+                               Foreground="{DynamicResource TextDimBrush}"/>
                     <DataGrid x:Name="QFGrid"
                               AutoGenerateColumns="False"
                               CanUserAddRows="False" CanUserDeleteRows="False">
@@ -257,6 +298,78 @@
                             <DataGridTextColumn Header="Search query" Binding="{Binding Query}" Width="*"/>
                         </DataGrid.Columns>
                     </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <!-- ══ Themes ═════════════════════════════════════════ -->
+            <TabItem Header="Themes">
+                <DockPanel Margin="16">
+                    <TextBlock DockPanel.Dock="Top" Margin="0 0 0 12"
+                               Text="Select a theme. Click Edit Colors to customise its palette."
+                               FontFamily="Consolas" FontSize="11"
+                               Foreground="{DynamicResource TextDimBrush}"/>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="ThemeCards">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0 0 0 8" Padding="14 12"
+                                            CornerRadius="4" BorderThickness="1">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                        <Setter Property="Background"  Value="{DynamicResource SelectBg}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="14"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <!-- Selection radio -->
+                                            <RadioButton Grid.Column="0"
+                                                         GroupName="ThemeSelect"
+                                                         IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                         VerticalAlignment="Center"/>
+                                            <!-- Name + swatches -->
+                                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}"
+                                                           FontFamily="Consolas" FontSize="13"
+                                                           Foreground="{DynamicResource TextBrush}"
+                                                           Margin="0 0 0 7"/>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Border Width="22" Height="14" CornerRadius="3" Margin="0 0 3 0"
+                                                            Background="{Binding AccentColor}" ToolTip="Accent"/>
+                                                    <Border Width="22" Height="14" CornerRadius="3" Margin="0 0 3 0"
+                                                            Background="{Binding BgColor}"
+                                                            BorderBrush="{DynamicResource MutedBrush}" BorderThickness="1"
+                                                            ToolTip="Background"/>
+                                                    <Border Width="22" Height="14" CornerRadius="3" Margin="0 0 3 0"
+                                                            Background="{Binding TextColor}" ToolTip="Text"/>
+                                                    <Border Width="22" Height="14" CornerRadius="3" Margin="0 0 3 0"
+                                                            Background="{Binding GreenColor}" ToolTip="Success"/>
+                                                    <Border Width="22" Height="14" CornerRadius="3"
+                                                            Background="{Binding RedColor}" ToolTip="Error"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <!-- Edit button -->
+                                            <Button Grid.Column="3" Content="Edit Colors"
+                                                    Tag="{Binding Name}"
+                                                    VerticalAlignment="Center"
+                                                    Click="EditTheme_Click"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </DockPanel>
             </TabItem>
 

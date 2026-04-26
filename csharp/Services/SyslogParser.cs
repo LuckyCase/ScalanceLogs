@@ -1,6 +1,7 @@
 using ScalanceLogs.Helpers;
 using ScalanceLogs.Models;
 using System.Text.RegularExpressions;
+using System.Windows;
 
 namespace ScalanceLogs.Services;
 
@@ -72,32 +73,41 @@ public static class SyslogParser
         Brush chipBg    = Brushes.Transparent;
         string chipLbl  = sevStr;
 
+        // Resolve theme brushes (fall back to Cyber defaults if resource not found)
+        Brush themeRed    = Application.Current.Resources["RedBrush"]    as Brush ?? ColorHelper.ParseBrush("#b85555");
+        Brush themeYellow = Application.Current.Resources["YellowBrush"] as Brush ?? ColorHelper.ParseBrush("#b8913a");
+        Brush themeAccent = Application.Current.Resources["AccentBrush"] as Brush ?? ColorHelper.ParseBrush("#4fa8c5");
+        Brush themeGreen  = Application.Current.Resources["GreenBrush"]  as Brush ?? ColorHelper.ParseBrush("#4a9e72");
+        Brush themeRowErr = Application.Current.Resources["RowErrorBg"]  as Brush ?? ColorHelper.ParseBrush("rgba(255,61,61,0.05)");
+        Brush themeRowWrn = Application.Current.Resources["RowWarnBg"]   as Brush ?? ColorHelper.ParseBrush("rgba(255,215,64,0.04)");
+        Brush themeMuted  = Application.Current.Resources["MutedBrush"]  as Brush ?? ColorHelper.ParseBrush("#3d4a60");
+
         switch (sevKey)
         {
             case "error": case "crit": case "emerg": case "alert":
-                rowBg    = ColorHelper.ParseBrush("rgba(255,61,61,0.05)");
-                rowBorder= ColorHelper.ParseBrush("#b85555");
-                chipFg   = ColorHelper.ParseBrush("#b85555");
+                rowBg    = themeRowErr;
+                rowBorder= themeRed;
+                chipFg   = themeRed;
                 chipBg   = ColorHelper.ParseBrush("rgba(255,61,61,0.2)");
                 break;
             case "warn":
-                rowBg    = ColorHelper.ParseBrush("rgba(255,215,64,0.04)");
-                rowBorder= ColorHelper.ParseBrush("#b8913a");
-                chipFg   = ColorHelper.ParseBrush("#b8913a");
+                rowBg    = themeRowWrn;
+                rowBorder= themeYellow;
+                chipFg   = themeYellow;
                 chipBg   = ColorHelper.ParseBrush("rgba(255,215,64,0.15)");
                 break;
             case "info": case "notice":
-                chipFg   = ColorHelper.ParseBrush("#4fa8c5");
+                chipFg   = themeAccent;
                 chipBg   = ColorHelper.ParseBrush("rgba(0,200,255,0.1)");
                 break;
             case "debug":
-                chipFg   = ColorHelper.ParseBrush("#3d4a60");
+                chipFg   = themeMuted;
                 chipBg   = ColorHelper.ParseBrush("rgba(100,100,100,0.15)");
                 break;
         }
 
-        if (isDown) rowBorder = ColorHelper.ParseBrush("#b85555");
-        if (isUp)   rowBorder = ColorHelper.ParseBrush("#4a9e72");
+        if (isDown) rowBorder = themeRed;
+        if (isUp)   rowBorder = themeGreen;
 
         // Message type override
         foreach (var mt in App.Settings.MessageTypes)

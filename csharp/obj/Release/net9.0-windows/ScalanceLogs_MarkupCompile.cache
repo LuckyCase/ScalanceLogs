@@ -10,11 +10,11 @@ none
 false
 TRACE;RELEASE;NET;NET9_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NET9_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 C:\Projects\ScalanceLogs\csharp\App.xaml
-32070106614
+8-1669947961
 
-20827408431
+25-1029995872
 210-1792318933
-MainWindow.xaml;SettingsWindow.xaml;ToastWindow.xaml;
+MainWindow.xaml;SettingsWindow.xaml;ThemeEditorWindow.xaml;Themes\Theme.Cyber.xaml;Themes\Theme.Light.xaml;Themes\Theme.Midnight.xaml;Themes\Theme.SlateGlass.xaml;ToastWindow.xaml;
 
 False
 

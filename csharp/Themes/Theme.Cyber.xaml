@@ -1,0 +1,22 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- ── Cyber (default dark) ───────────────────────────── -->
+    <SolidColorBrush x:Key="BgBrush"       Color="#10121a"/>
+    <SolidColorBrush x:Key="SurfaceBrush"  Color="#161b26"/>
+    <SolidColorBrush x:Key="SubtleBrush"   Color="#1a1c24"/>
+    <SolidColorBrush x:Key="BorderBrush"   Color="#222840"/>
+    <SolidColorBrush x:Key="AccentBrush"   Color="#4fa8c5"/>
+    <SolidColorBrush x:Key="Accent2Brush"  Color="#2d6a82"/>
+    <SolidColorBrush x:Key="TextBrush"     Color="#a8b4cc"/>
+    <SolidColorBrush x:Key="TextDimBrush"  Color="#556070"/>
+    <SolidColorBrush x:Key="MutedBrush"    Color="#3d4a60"/>
+    <SolidColorBrush x:Key="GreenBrush"    Color="#4a9e72"/>
+    <SolidColorBrush x:Key="RedBrush"      Color="#b85555"/>
+    <SolidColorBrush x:Key="YellowBrush"   Color="#b8913a"/>
+    <SolidColorBrush x:Key="TransBrush"    Color="Transparent"/>
+    <SolidColorBrush x:Key="HoverBg"       Color="#0a1520"/>
+    <SolidColorBrush x:Key="SelectBg"      Color="#0d2030"/>
+    <SolidColorBrush x:Key="PressedBg"     Color="#1a2a35"/>
+    <SolidColorBrush x:Key="RowErrorBg"    Color="#1a0808"/>
+    <SolidColorBrush x:Key="RowWarnBg"     Color="#1a1608"/>
+</ResourceDictionary>

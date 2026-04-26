@@ -2,11 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "viewer",
-      "runtimeExecutable": "python",
-      "runtimeArgs": ["viewer_server.py"],
-      "port": 8080,
-      "autoPort": false
+      "name": "color-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "C:\\Projects\\ScalanceLogs\\color_preview", "-l", "7788", "--no-clipboard"],
+      "port": 7788
     }
   ]
 }

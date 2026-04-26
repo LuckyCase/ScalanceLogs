@@ -17,8 +17,10 @@ public partial class ToastWindow : Window
 
         if (isWarning)
         {
-            AccentBar.Background  = new SolidColorBrush(Color.FromRgb(0xb8, 0x91, 0x3a));
-            TitleText.Foreground  = new SolidColorBrush(Color.FromRgb(0xb8, 0x91, 0x3a));
+            var warnBrush = Application.Current.Resources["YellowBrush"] as SolidColorBrush
+                            ?? new SolidColorBrush(Color.FromRgb(0xb8, 0x91, 0x3a));
+            AccentBar.Background = warnBrush;
+            TitleText.Foreground = warnBrush;
         }
 
         // Position: bottom-right corner above taskbar

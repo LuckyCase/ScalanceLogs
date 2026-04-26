@@ -1,0 +1,22 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- ── Clean Light / SaaS ────────────────────────────── -->
+    <SolidColorBrush x:Key="BgBrush"       Color="#F8FAFC"/>
+    <SolidColorBrush x:Key="SurfaceBrush"  Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SubtleBrush"   Color="#F1F5F9"/>
+    <SolidColorBrush x:Key="BorderBrush"   Color="#E2E8F0"/>
+    <SolidColorBrush x:Key="AccentBrush"   Color="#3B82F6"/>
+    <SolidColorBrush x:Key="Accent2Brush"  Color="#2563EB"/>
+    <SolidColorBrush x:Key="TextBrush"     Color="#0F172A"/>
+    <SolidColorBrush x:Key="TextDimBrush"  Color="#94A3B8"/>
+    <SolidColorBrush x:Key="MutedBrush"    Color="#CBD5E1"/>
+    <SolidColorBrush x:Key="GreenBrush"    Color="#10B981"/>
+    <SolidColorBrush x:Key="RedBrush"      Color="#EF4444"/>
+    <SolidColorBrush x:Key="YellowBrush"   Color="#F59E0B"/>
+    <SolidColorBrush x:Key="TransBrush"    Color="Transparent"/>
+    <SolidColorBrush x:Key="HoverBg"       Color="#F1F5F9"/>
+    <SolidColorBrush x:Key="SelectBg"      Color="#EFF6FF"/>
+    <SolidColorBrush x:Key="PressedBg"     Color="#DBEAFE"/>
+    <SolidColorBrush x:Key="RowErrorBg"    Color="#FEF2F2"/>
+    <SolidColorBrush x:Key="RowWarnBg"     Color="#FFFBEB"/>
+</ResourceDictionary>

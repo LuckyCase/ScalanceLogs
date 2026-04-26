@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>ScalanceLogs — Theme Colors</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #111;
+    color: #ccc;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    padding: 32px;
+  }
+  h1 { font-size: 18px; color: #4fa8c5; margin-bottom: 6px; }
+  p  { color: #556070; font-size: 12px; margin-bottom: 28px; }
+
+  table { border-collapse: collapse; width: 100%; }
+  thead th {
+    text-align: left;
+    padding: 8px 14px;
+    font-size: 11px;
+    color: #4fa8c5;
+    border-bottom: 1px solid #222840;
+    background: #161b26;
+  }
+  tbody tr:hover { background: rgba(255,255,255,0.03); }
+  td {
+    padding: 7px 14px;
+    border-bottom: 1px solid #1a1e2c;
+    vertical-align: middle;
+  }
+  td:first-child {
+    color: #556070;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.12);
+    flex-shrink: 0;
+  }
+  .hex { font-size: 12px; color: #8a97b0; }
+
+  /* theme header badges */
+  .theme-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: .5px;
+  }
+  .badge-cyber      { background:#0d2030; color:#4fa8c5; border:1px solid #222840; }
+  .badge-light      { background:#EFF6FF; color:#2563EB; border:1px solid #E2E8F0; }
+  .badge-midnight   { background:#1A1830; color:#7C6DF8; border:1px solid #1E2235; }
+  .badge-slateglass { background:#333337; color:#2DD4BF; border:1px solid #3A3A3E; }
+</style>
+</head>
+<body>
+
+<h1>ScalanceLogs — Theme Color Palette</h1>
+<p>18 brush keys × 4 themes</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Key</th>
+      <th><span class="theme-badge badge-cyber">Cyber</span></th>
+      <th><span class="theme-badge badge-light">Light</span></th>
+      <th><span class="theme-badge badge-midnight">Midnight</span></th>
+      <th><span class="theme-badge badge-slateglass">SlateGlass</span></th>
+    </tr>
+  </thead>
+  <tbody id="rows"></tbody>
+</table>
+
+<script>
+const data = [
+  ["BgBrush",       "#10121a", "#F8FAFC", "#0C0E14", "#1C1C1E"],
+  ["SurfaceBrush",  "#161b26", "#FFFFFF", "#11141D", "#2C2C30"],
+  ["SubtleBrush",   "#1a1c24", "#F1F5F9", "#151829", "#141416"],
+  ["BorderBrush",   "#222840", "#E2E8F0", "#1E2235", "#3A3A3E"],
+  ["AccentBrush",   "#4fa8c5", "#3B82F6", "#7C6DF8", "#2DD4BF"],
+  ["Accent2Brush",  "#2d6a82", "#2563EB", "#6D5EE8", "#0D9488"],
+  ["TextBrush",     "#a8b4cc", "#0F172A", "#E2E8F0", "#F5F5F7"],
+  ["TextDimBrush",  "#556070", "#94A3B8", "#4A5180", "#8E8E93"],
+  ["MutedBrush",    "#3d4a60", "#CBD5E1", "#2A2E4A", "#48484A"],
+  ["GreenBrush",    "#4a9e72", "#10B981", "#34D399", "#30D158"],
+  ["RedBrush",      "#b85555", "#EF4444", "#F87171", "#FF453A"],
+  ["YellowBrush",   "#b8913a", "#F59E0B", "#FBBF24", "#FFD60A"],
+  ["HoverBg",       "#0a1520", "#F1F5F9", "#181C28", "#3A3A3E"],
+  ["SelectBg",      "#0d2030", "#EFF6FF", "#1A1830", "#333337"],
+  ["PressedBg",     "#1a2a35", "#DBEAFE", "#1A1830", "#404044"],
+  ["RowErrorBg",    "#1a0808", "#FEF2F2", "#1C1010", "#2A1212"],
+  ["RowWarnBg",     "#1a1608", "#FFFBEB", "#1C1A0C", "#2A2408"],
+  ["TransBrush",    "transparent", "transparent", "transparent", "transparent"],
+];
+
+const tbody = document.getElementById("rows");
+data.forEach(([key, ...colors]) => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td>${key}</td>` + colors.map(c => {
+    const swatchBg = c === "transparent"
+      ? "repeating-linear-gradient(45deg,#333 0,#333 4px,#222 4px,#222 8px)"
+      : c;
+    const isLight = c !== "transparent" && isLightColor(c);
+    const swatchBorder = isLight
+      ? "border:1px solid rgba(0,0,0,0.15)"
+      : "border:1px solid rgba(255,255,255,0.1)";
+    return `<td><div class="cell">
+      <div class="swatch" style="background:${swatchBg};${swatchBorder}"></div>
+      <span class="hex">${c}</span>
+    </div></td>`;
+  }).join("");
+  tbody.appendChild(tr);
+});
+
+function isLightColor(hex) {
+  if (hex === "transparent") return false;
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return (r*299 + g*587 + b*114) / 1000 > 140;
+}
+</script>
+</body>
+</html>

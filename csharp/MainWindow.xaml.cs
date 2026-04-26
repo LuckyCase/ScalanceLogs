@@ -47,7 +47,12 @@ public partial class MainWindow : Window
 
         EventHub.MessageReceived += OnMessageReceived;
 
-        Loaded  += (_, _) => { RefreshFileTree(); BuildQuickFilters(); };
+        Loaded  += (_, _) =>
+        {
+            RefreshFileTree();
+            BuildQuickFilters();
+            Helpers.TitleBarHelper.Apply(this);
+        };
         Closing += OnClosing;
     }
 
@@ -126,6 +131,8 @@ public partial class MainWindow : Window
     }
 
     // ── Log loading ──────────────────────────────────────────────
+    public void ReloadLog() => LoadLog();
+
     private void LoadLog()
     {
         if (_currentFile is null) return;

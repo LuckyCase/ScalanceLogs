@@ -1,3 +1,6 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
 namespace ScalanceLogs.Models;
 
 public class AppSettings
@@ -6,10 +9,14 @@ public class AppSettings
     public int    LogRetentionDays  { get; set; } = 30;
     public string LogPath           { get; set; } = "logs";
     public bool   AutoStart         { get; set; } = false;
+    public string Theme             { get; set; } = "Cyber";
     public bool   BalloonNotifications { get; set; } = true;
     // Labels that trigger balloon. Empty = ALL messages.
     public List<string> BalloonLabels { get; set; } = ["EMERG", "ALERT", "CRIT", "ERROR",
                                                         "LINK DOWN", "LINK UP"];
+
+    // Per-theme color overrides (key = theme name, value = {brushKey → hex})
+    public Dictionary<string, Dictionary<string, string>> ThemeOverrides { get; set; } = new();
 
     public List<SwitchNameEntry>   SwitchNames   { get; set; } = [];
     public List<string>            EventPatterns { get; set; } = DefaultEventPatterns();
@@ -50,12 +57,19 @@ public class SwitchNameEntry
     public string Name { get; set; } = "";
 }
 
-public class MessageTypeEntry
+public class MessageTypeEntry : INotifyPropertyChanged
 {
-    public string Pattern { get; set; } = "";
-    public string Label   { get; set; } = "";
-    public string Color   { get; set; } = "#a8b4cc";
-    public string Bg      { get; set; } = "rgba(168,180,204,0.08)";
+    private string _pattern = "", _label = "",
+                   _color = "#a8b4cc", _bg = "rgba(168,180,204,0.08)";
+
+    public string Pattern { get => _pattern; set { _pattern = value; OnPC(); } }
+    public string Label   { get => _label;   set { _label   = value; OnPC(); } }
+    public string Color   { get => _color;   set { _color   = value; OnPC(); } }
+    public string Bg      { get => _bg;      set { _bg      = value; OnPC(); } }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnPC([CallerMemberName] string? n = null) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
 }
 
 public class QuickFilterEntry

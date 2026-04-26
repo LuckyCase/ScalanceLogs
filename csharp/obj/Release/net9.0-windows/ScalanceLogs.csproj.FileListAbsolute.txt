@@ -25,3 +25,9 @@ C:\Projects\ScalanceLogs\csharp\obj\Release\net9.0-windows\ScalanceLogs.genrunti
 C:\Projects\ScalanceLogs\csharp\obj\Release\net9.0-windows\ref\ScalanceLogs.dll
 C:\Projects\ScalanceLogs\csharp\obj\Release\net9.0-windows\ToastWindow.baml
 C:\Projects\ScalanceLogs\csharp\obj\Release\net9.0-windows\ToastWindow.g.cs
+C:\Projects\ScalanceLogs\csharp\obj\Release\net9.0-windows\Themes\Theme.Cyber.baml
+C:\Projects\ScalanceLogs\csharp\obj\Release\net9.0-windows\Themes\Theme.Light.baml
+C:\Projects\ScalanceLogs\csharp\obj\Release\net9.0-windows\Themes\Theme.Midnight.baml
+C:\Projects\ScalanceLogs\csharp\obj\Release\net9.0-windows\Themes\Theme.SlateGlass.baml
+C:\Projects\ScalanceLogs\csharp\obj\Release\net9.0-windows\ThemeEditorWindow.g.cs
+C:\Projects\ScalanceLogs\csharp\obj\Release\net9.0-windows\ThemeEditorWindow.baml
