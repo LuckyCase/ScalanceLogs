@@ -125,7 +125,8 @@ public static class ThemeManager
         if (old != null) merged.Remove(old);
         merged.Add(dict);
 
-        // Re-colour every open window's title bar
+        // Refresh cached brushes + repaint every open window's title bar
+        ThemeBrushes.Refresh();
         TitleBarHelper.ApplyAll();
     }
 

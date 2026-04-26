@@ -1,7 +1,6 @@
 using ScalanceLogs.Helpers;
 using ScalanceLogs.Models;
 using System.Text.RegularExpressions;
-using System.Windows;
 
 namespace ScalanceLogs.Services;
 
@@ -18,8 +17,10 @@ public static class SyslogParser
         @"^(\d{4}-\d{2}-\d{2}\s[\d:]+)\s+\[([^\]]+)\]\s+([\d.]+(?:\s+\([^)]+\))?)[^|]*\|\s*(.*)$",
         RegexOptions.Compiled);
 
-    // Extracts the useful part after syslog structured-data block [...]
     private static readonly Regex ExtractMsgRe = new(@"\[[^\]]*\]\s*(.+)$", RegexOptions.Compiled);
+    private static readonly Regex IpHostRe     = new(@"^(\d+\.\d+\.\d+\.\d+)(.*)", RegexOptions.Compiled);
+    private static readonly Regex TimeRe       = new(@"\d{2}:\d{2}:\d{2}$", RegexOptions.Compiled);
+    private static readonly Regex SwitchTagRe  = new(@"\(([^)]+)\)", RegexOptions.Compiled);
 
     private static readonly string[] SeverityLabels =
         ["EMERG", "ALERT", "CRIT", "ERROR", "WARN", "NOTICE", "INFO", "DEBUG"];
@@ -63,56 +64,47 @@ public static class SyslogParser
 
         var msg     = ExtractUsefulMessage(rawPart);
         var sevKey  = sevStr.ToLowerInvariant();
-        var isDown  = Regex.IsMatch(line, @"link\s+down|port.*down", RegexOptions.IgnoreCase);
-        var isUp    = Regex.IsMatch(line, @"link\s+up|port.*up",   RegexOptions.IgnoreCase);
+        var isDown  = SafeRegex.IsMatch(line, @"link\s+down|port.*down");
+        var isUp    = SafeRegex.IsMatch(line, @"link\s+up|port.*up");
 
-        // Severity-based row & chip colours
+        // Severity-based row & chip colours (cached brushes — no per-row Resources lookup)
         Brush rowBg     = Brushes.Transparent;
         Brush rowBorder = Brushes.Transparent;
         Brush chipFg    = Brushes.Gray;
         Brush chipBg    = Brushes.Transparent;
         string chipLbl  = sevStr;
 
-        // Resolve theme brushes (fall back to Cyber defaults if resource not found)
-        Brush themeRed    = Application.Current.Resources["RedBrush"]    as Brush ?? ColorHelper.ParseBrush("#b85555");
-        Brush themeYellow = Application.Current.Resources["YellowBrush"] as Brush ?? ColorHelper.ParseBrush("#b8913a");
-        Brush themeAccent = Application.Current.Resources["AccentBrush"] as Brush ?? ColorHelper.ParseBrush("#4fa8c5");
-        Brush themeGreen  = Application.Current.Resources["GreenBrush"]  as Brush ?? ColorHelper.ParseBrush("#4a9e72");
-        Brush themeRowErr = Application.Current.Resources["RowErrorBg"]  as Brush ?? ColorHelper.ParseBrush("rgba(255,61,61,0.05)");
-        Brush themeRowWrn = Application.Current.Resources["RowWarnBg"]   as Brush ?? ColorHelper.ParseBrush("rgba(255,215,64,0.04)");
-        Brush themeMuted  = Application.Current.Resources["MutedBrush"]  as Brush ?? ColorHelper.ParseBrush("#3d4a60");
-
         switch (sevKey)
         {
             case "error": case "crit": case "emerg": case "alert":
-                rowBg    = themeRowErr;
-                rowBorder= themeRed;
-                chipFg   = themeRed;
-                chipBg   = ColorHelper.ParseBrush("rgba(255,61,61,0.2)");
+                rowBg     = ThemeBrushes.RowErr;
+                rowBorder = ThemeBrushes.Red;
+                chipFg    = ThemeBrushes.Red;
+                chipBg    = ColorHelper.ParseBrush("rgba(255,61,61,0.2)");
                 break;
             case "warn":
-                rowBg    = themeRowWrn;
-                rowBorder= themeYellow;
-                chipFg   = themeYellow;
-                chipBg   = ColorHelper.ParseBrush("rgba(255,215,64,0.15)");
+                rowBg     = ThemeBrushes.RowWrn;
+                rowBorder = ThemeBrushes.Yellow;
+                chipFg    = ThemeBrushes.Yellow;
+                chipBg    = ColorHelper.ParseBrush("rgba(255,215,64,0.15)");
                 break;
             case "info": case "notice":
-                chipFg   = themeAccent;
-                chipBg   = ColorHelper.ParseBrush("rgba(0,200,255,0.1)");
+                chipFg    = ThemeBrushes.Accent;
+                chipBg    = ColorHelper.ParseBrush("rgba(0,200,255,0.1)");
                 break;
             case "debug":
-                chipFg   = themeMuted;
-                chipBg   = ColorHelper.ParseBrush("rgba(100,100,100,0.15)");
+                chipFg    = ThemeBrushes.Muted;
+                chipBg    = ColorHelper.ParseBrush("rgba(100,100,100,0.15)");
                 break;
         }
 
-        if (isDown) rowBorder = themeRed;
-        if (isUp)   rowBorder = themeGreen;
+        if (isDown) rowBorder = ThemeBrushes.Red;
+        if (isUp)   rowBorder = ThemeBrushes.Green;
 
-        // Message type override
+        // Message type override (uses SafeRegex — protects against ReDoS)
         foreach (var mt in App.Settings.MessageTypes)
         {
-            if (Regex.IsMatch(msg, mt.Pattern, RegexOptions.IgnoreCase))
+            if (SafeRegex.IsMatch(msg, mt.Pattern))
             {
                 chipLbl = mt.Label;
                 chipFg  = ColorHelper.ParseBrush(mt.Color);
@@ -126,7 +118,7 @@ public static class SyslogParser
 
         // Split host into IP + suffix; validate IP before making it a clickable link
         string ipPart = "", hostSuffix = "";
-        var ipM = Regex.Match(host, @"^(\d+\.\d+\.\d+\.\d+)(.*)");
+        var ipM = IpHostRe.Match(host);
         if (ipM.Success && System.Net.IPAddress.TryParse(ipM.Groups[1].Value, out _))
         {
             ipPart     = ipM.Groups[1].Value;
@@ -134,7 +126,6 @@ public static class SyslogParser
         }
         else
         {
-            // Not a valid IP — show as plain text in hostSuffix, no clickable link
             hostSuffix = host;
         }
 
@@ -142,16 +133,19 @@ public static class SyslogParser
         {
             Raw          = rawPart,
             Timestamp    = ts,
-            SeverityText = chipLbl,
+            Severity     = sevStr,        // ← original severity (used for stats)
+            SeverityText = sevStr,
             Host         = host,
             IpPart       = ipPart,
             HostSuffix   = hostSuffix,
             Message      = msg,
-            ChipLabel    = chipLbl,
+            ChipLabel    = chipLbl,       // ← may be overridden by MessageType
             ChipFg       = chipFg,
             ChipBg       = chipBg,
             RowBg        = rowBg,
             RowBorder    = rowBorder,
+            IsLinkDown   = isDown,
+            IsLinkUp     = isUp,
         };
     }
 
@@ -161,9 +155,9 @@ public static class SyslogParser
         var entry = BuildEntry(line);
         if (entry is null) return null;
 
-        var swM = Regex.Match(entry.Host, @"\(([^)]+)\)");
+        var swM = SwitchTagRe.Match(entry.Host);
         var sw  = swM.Success ? swM.Groups[1].Value : entry.IpPart;
-        var timeM = Regex.Match(entry.Timestamp, @"\d{2}:\d{2}:\d{2}$");
+        var timeM = TimeRe.Match(entry.Timestamp);
 
         return new LiveEntry
         {

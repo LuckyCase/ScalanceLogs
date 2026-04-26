@@ -76,7 +76,7 @@ namespace ScalanceLogs {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/ScalanceLogs;component/toastwindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/ScalanceLogs;V1.0.0.0;component/toastwindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\ToastWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

@@ -42,7 +42,11 @@ public static class TitleBarHelper
             if (res["BorderBrush"] is SolidColorBrush border)
                 SetAttr(hwnd, DWMWA_BORDER_COLOR, ToColorRef(border.Color));
         }
-        catch { /* non-fatal — older OS, sandbox, etc. */ }
+        catch (Exception ex)
+        {
+            // Non-fatal — older OS (Win10 ignores), sandbox, etc.
+            System.Diagnostics.Debug.WriteLine($"[TitleBarHelper] {ex.Message}");
+        }
     }
 
     /// <summary>Apply to every open window (called after a theme switch).</summary>

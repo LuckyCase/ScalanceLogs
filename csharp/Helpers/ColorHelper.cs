@@ -12,14 +12,37 @@ public static class ColorHelper
     {
         if (string.IsNullOrWhiteSpace(css)) return Brushes.Transparent;
 
-        if (css.StartsWith('#') && css.Length == 7)
+        if (css.Equals("transparent", StringComparison.OrdinalIgnoreCase))
+            return Brushes.Transparent;
+
+        if (css.StartsWith('#'))
         {
             try
             {
-                var r = Convert.ToByte(css[1..3], 16);
-                var g = Convert.ToByte(css[3..5], 16);
-                var b = Convert.ToByte(css[5..7], 16);
-                return new SolidColorBrush(System.Windows.Media.Color.FromRgb(r, g, b));
+                var hex = css[1..];
+                byte r, g, b, a = 255;
+                switch (hex.Length)
+                {
+                    case 3:                                          // #RGB
+                        r = (byte)(Convert.ToByte(hex[..1], 16) * 17);
+                        g = (byte)(Convert.ToByte(hex[1..2], 16) * 17);
+                        b = (byte)(Convert.ToByte(hex[2..3], 16) * 17);
+                        break;
+                    case 6:                                          // #RRGGBB
+                        r = Convert.ToByte(hex[..2], 16);
+                        g = Convert.ToByte(hex[2..4], 16);
+                        b = Convert.ToByte(hex[4..6], 16);
+                        break;
+                    case 8:                                          // #RRGGBBAA
+                        r = Convert.ToByte(hex[..2], 16);
+                        g = Convert.ToByte(hex[2..4], 16);
+                        b = Convert.ToByte(hex[4..6], 16);
+                        a = Convert.ToByte(hex[6..8], 16);
+                        break;
+                    default:
+                        return Brushes.Transparent;
+                }
+                return new SolidColorBrush(System.Windows.Media.Color.FromArgb(a, r, g, b));
             }
             catch { return Brushes.Transparent; }
         }

@@ -13,6 +13,7 @@ public partial class App : Application
 
     private SingleInstance?  _singleInstance;
     private NotifyIcon?      _trayIcon;
+    private Icon?            _trayIconBitmap;   // owned HICON — must be destroyed
     private SyslogCollector? _collector;
     private CancellationTokenSource _collectorCts = new();
 
@@ -55,9 +56,10 @@ public partial class App : Application
     // ── Tray icon ────────────────────────────────────────────────
     private void SetupTrayIcon()
     {
+        _trayIconBitmap = CreateTrayIcon();
         _trayIcon = new NotifyIcon
         {
-            Icon    = CreateTrayIcon(),
+            Icon    = _trayIconBitmap,
             Visible = true,
             Text    = "ScalanceLogs — Syslog Collector",
         };
@@ -114,15 +116,17 @@ public partial class App : Application
     {
         _collectorCts.Cancel();
         _trayIcon?.Dispose();
+        _trayIconBitmap?.Dispose();   // releases native HICON
         _singleInstance?.Dispose();
         Shutdown();
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
-        _collectorCts.Cancel();
+        try { _collectorCts.Cancel(); } catch { }
         _collectorCts.Dispose();
         _trayIcon?.Dispose();
+        _trayIconBitmap?.Dispose();
         _singleInstance?.Dispose();
         base.OnExit(e);
     }

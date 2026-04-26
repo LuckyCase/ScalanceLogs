@@ -7,7 +7,10 @@ public class LogEntry : INotifyPropertyChanged
 {
     public string Raw          { get; set; } = "";
     public string Timestamp    { get; set; } = "";
-    public string SeverityText { get; set; } = "INFO";
+    public string Severity     { get; set; } = "INFO";   // original syslog severity (for stats)
+    public string SeverityText { get; set; } = "INFO";   // shown text (legacy)
+    public bool   IsLinkDown   { get; set; }
+    public bool   IsLinkUp     { get; set; }
     public string Host         { get; set; } = "";
     public string IpPart       { get; set; } = "";
     public string HostSuffix   { get; set; } = "";

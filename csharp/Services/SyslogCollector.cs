@@ -2,21 +2,35 @@ using ScalanceLogs.Helpers;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.RegularExpressions;
+using System.Threading.Channels;
 
 namespace ScalanceLogs.Services;
 
 public class SyslogCollector
 {
-    private static readonly string[] SevLabels =
-        ["EMERG", "ALERT", "CRIT", "ERROR", "WARN", "NOTICE", "INFO", "DEBUG"];
+    // Refuse oversized datagrams (jumbo or fragmentation amplification)
+    private const int MaxPacketBytes = 8 * 1024;
+
+    // Bounded queue: under flood we drop new packets instead of OOM/blocking the receive loop.
+    private const int QueueCapacity = 4096;
+
+    private Task? _ingestTask;
 
     public void StartAsync(CancellationToken ct)
     {
-        _ = Task.Run(() => RunUdp(ct), ct); // fire-and-forget intentional
+        var channel = Channel.CreateBounded<(string raw, string ip)>(
+            new BoundedChannelOptions(QueueCapacity)
+            {
+                FullMode    = BoundedChannelFullMode.DropWrite,
+                SingleReader = true,
+                SingleWriter = true,
+            });
+
+        _ = Task.Run(() => RunUdp(channel.Writer, ct), ct);
+        _ingestTask = Task.Run(() => RunIngest(channel.Reader, ct), ct);
     }
 
-    private async Task RunUdp(CancellationToken ct)
+    private async Task RunUdp(ChannelWriter<(string raw, string ip)> writer, CancellationToken ct)
     {
         var port = App.Settings.UdpPort;
 
@@ -28,6 +42,7 @@ public class SyslogCollector
                     "ScalanceLogs — Permission Error",
                     System.Windows.MessageBoxButton.OK,
                     System.Windows.MessageBoxImage.Warning));
+            writer.Complete();
             return;
         }
 
@@ -40,12 +55,17 @@ public class SyslogCollector
                 try
                 {
                     var result = await udp.ReceiveAsync(ct);
-                    var raw    = Encoding.UTF8.GetString(result.Buffer).Trim();
-                    var srcIp  = result.RemoteEndPoint.Address.ToString();
-                    Handle(raw, srcIp);
+                    if (result.Buffer.Length == 0 || result.Buffer.Length > MaxPacketBytes)
+                        continue;
+
+                    var raw = Encoding.UTF8.GetString(result.Buffer).Trim();
+                    if (string.IsNullOrEmpty(raw)) continue;
+
+                    var ip  = result.RemoteEndPoint.Address.ToString();
+                    writer.TryWrite((raw, ip)); // drops on full queue (DropWrite)
                 }
                 catch (OperationCanceledException) { break; }
-                catch { /* ignore individual message errors */ }
+                catch { /* malformed packet — ignore */ }
             }
         }
         catch (SocketException ex)
@@ -57,6 +77,21 @@ public class SyslogCollector
                     System.Windows.MessageBoxButton.OK,
                     System.Windows.MessageBoxImage.Error));
         }
+        finally
+        {
+            writer.TryComplete();
+        }
+    }
+
+    // Off the receive thread — file I/O can be slow under flood.
+    private static async Task RunIngest(ChannelReader<(string raw, string ip)> reader, CancellationToken ct)
+    {
+        try
+        {
+            await foreach (var (raw, ip) in reader.ReadAllAsync(ct))
+                Handle(raw, ip);
+        }
+        catch (OperationCanceledException) { }
     }
 
     private static void Handle(string raw, string srcIp)
@@ -85,6 +120,6 @@ public class SyslogCollector
     {
         var patterns = App.Settings.EventPatterns;
         if (patterns.Count == 0) return true;
-        return patterns.Any(p => Regex.IsMatch(message, p, RegexOptions.IgnoreCase));
+        return patterns.Any(p => SafeRegex.IsMatch(message, p));
     }
 }

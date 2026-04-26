@@ -1,5 +1,5 @@
 ﻿ScalanceLogs
-
+1.0.0.0
 
 winexe
 C#
@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET9_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NET9_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 C:\Projects\ScalanceLogs\csharp\App.xaml
-8-1669947961
+5-264490024
 
-252065003297
+282047527394
 210-1792318933
-MainWindow.xaml;SettingsWindow.xaml;ThemeEditorWindow.xaml;Themes\Theme.Cyber.xaml;Themes\Theme.Light.xaml;Themes\Theme.Midnight.xaml;Themes\Theme.SlateGlass.xaml;ToastWindow.xaml;
+MainWindow.xaml;SettingsWindow.xaml;ThemeEditorWindow.xaml;Themes\Theme.Cyber.xaml;ToastWindow.xaml;
 
 False
 

@@ -1,3 +1,4 @@
+using ScalanceLogs.Helpers;
 using ScalanceLogs.Models;
 using System.IO;
 using System.Text.Json;
@@ -17,9 +18,24 @@ public static class SettingsService
         try
         {
             if (File.Exists(Path))
-                return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(Path)) ?? new();
+            {
+                var raw = File.ReadAllText(Path);
+                var s   = JsonSerializer.Deserialize<AppSettings>(raw);
+                if (s != null) return s;
+            }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            // Corrupt JSON — preserve a backup so the user can recover, then start fresh.
+            try
+            {
+                var backup = Path + $".broken-{DateTime.Now:yyyyMMddHHmmss}.bak";
+                if (File.Exists(Path)) File.Copy(Path, backup, overwrite: true);
+                System.Diagnostics.Debug.WriteLine(
+                    $"[SettingsService] settings.json unreadable ({ex.Message}); backed up to {backup}");
+            }
+            catch { }
+        }
         return new AppSettings();
     }
 
@@ -27,5 +43,7 @@ public static class SettingsService
     {
         Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path)!);
         File.WriteAllText(Path, JsonSerializer.Serialize(s, Opts));
+        // Patterns may have changed → blow the regex cache so updates take effect.
+        SafeRegex.ClearCache();
     }
 }

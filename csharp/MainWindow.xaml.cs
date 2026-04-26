@@ -156,11 +156,12 @@ public partial class MainWindow : Window
             if (entry is null) continue;
             _logEntries.Add(entry);
 
-            var sev = entry.SeverityText.ToLowerInvariant();
+            // Count by ORIGINAL severity (not ChipLabel — which can be overridden by MessageType)
+            var sev = entry.Severity.ToLowerInvariant();
             if (sev is "error" or "crit" or "emerg" or "alert") err++;
-            if (sev == "warn") warn++;
-            if (Regex.IsMatch(line, @"link\s+down|port.*down", RegexOptions.IgnoreCase)) down++;
-            if (Regex.IsMatch(line, @"link\s+up|port.*up",   RegexOptions.IgnoreCase)) up++;
+            else if (sev == "warn") warn++;
+            if (entry.IsLinkDown) down++;
+            if (entry.IsLinkUp)   up++;
         }
 
         StatTotal.Text = lines.Length.ToString();
@@ -227,8 +228,7 @@ public partial class MainWindow : Window
         {
             var patterns = App.Settings.EventPatterns;
             if (patterns.Count > 0 &&
-                !patterns.Any(p => System.Text.RegularExpressions.Regex.IsMatch(
-                    msg.Message, p, RegexOptions.IgnoreCase)))
+                !patterns.Any(p => Helpers.SafeRegex.IsMatch(msg.Message, p)))
                 return;
         }
         else
@@ -248,13 +248,17 @@ public partial class MainWindow : Window
         while (_logEntries.Count > max)
             _logEntries.RemoveAt(_logEntries.Count - 1);
 
-        // Update stats incrementally
+        // Update stats incrementally — by ORIGINAL severity, plus link state
         StatTotal.Text = _logEntries.Count.ToString();
-        var sev = entry.SeverityText.ToLowerInvariant();
+        var sev = entry.Severity.ToLowerInvariant();
         if (sev is "error" or "crit" or "emerg" or "alert")
             StatErr.Text = (int.TryParse(StatErr.Text, out var e) ? e + 1 : 1).ToString();
         else if (sev == "warn")
             StatWarn.Text = (int.TryParse(StatWarn.Text, out var w) ? w + 1 : 1).ToString();
+        if (entry.IsLinkDown)
+            StatDown.Text = (int.TryParse(StatDown.Text, out var d) ? d + 1 : 1).ToString();
+        if (entry.IsLinkUp)
+            StatUp.Text = (int.TryParse(StatUp.Text, out var u) ? u + 1 : 1).ToString();
 
         _lastUpdate = DateTime.Now;
 
@@ -273,7 +277,7 @@ public partial class MainWindow : Window
         }
         LiveBadge.Text = _liveEntries.Count.ToString();
 
-        // Clear stale switches after 60s
+        // Drop switches with no remaining live entries (entries fade after LiveFadeSec)
         for (int i = _activeSw.Count - 1; i >= 0; i--)
         {
             var sw = _activeSw[i];

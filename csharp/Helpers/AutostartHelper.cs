@@ -9,16 +9,37 @@ public static class AutostartHelper
 
     public static void Set(bool enabled)
     {
-        using var key = Registry.CurrentUser.OpenSubKey(RegPath, writable: true)!;
-        if (enabled)
-            key.SetValue(AppName, $"\"{Environment.ProcessPath}\"");
-        else
-            key.DeleteValue(AppName, throwOnMissingValue: false);
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(RegPath, writable: true)
+                            ?? Registry.CurrentUser.CreateSubKey(RegPath, writable: true);
+            if (key is null) return;
+
+            if (enabled)
+            {
+                var path = Environment.ProcessPath;
+                if (string.IsNullOrEmpty(path)) return;
+                // Quote path; ProcessPath cannot contain '"' on Windows so this is safe.
+                key.SetValue(AppName, $"\"{path}\"");
+            }
+            else
+            {
+                key.DeleteValue(AppName, throwOnMissingValue: false);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[AutostartHelper] {ex.Message}");
+        }
     }
 
     public static bool IsEnabled()
     {
-        using var key = Registry.CurrentUser.OpenSubKey(RegPath);
-        return key?.GetValue(AppName) is not null;
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(RegPath);
+            return key?.GetValue(AppName) is not null;
+        }
+        catch { return false; }
     }
 }

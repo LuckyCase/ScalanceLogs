@@ -9,5 +9,12 @@
     <AssemblyName>ScalanceLogs</AssemblyName>
     <RootNamespace>ScalanceLogs</RootNamespace>
     <StartupObject>ScalanceLogs.App</StartupObject>
+    <AssemblyTitle>SW-LOG Syslog Viewer</AssemblyTitle>
+    <Product>SW-LOG</Product>
+    <Description>Industrial syslog collector and viewer for Scalance switches</Description>
+    <Company>IVTI</Company>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Version>1.0.0</Version>
   </PropertyGroup>
 </Project>
