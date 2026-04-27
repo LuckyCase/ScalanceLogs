@@ -46,18 +46,19 @@ public class ThemeColorRow : INotifyPropertyChanged
 public partial class ThemeEditorWindow : Window
 {
     private readonly string _themeName;
-    private readonly ObservableCollection<object> _rows = [];
+    private readonly ObservableCollection<object> _rows = new ObservableCollection<object>();
 
     // Groups and their keys (TransBrush is always transparent — skip)
     private static readonly (string Group, string[] Keys)[] Layout =
-    [
-        ("BACKGROUNDS",          ["BgBrush", "SurfaceBrush", "SubtleBrush"]),
-        ("ACCENT",               ["AccentBrush", "Accent2Brush"]),
-        ("TEXT",                 ["TextBrush", "TextDimBrush", "MutedBrush"]),
-        ("STATUS",               ["GreenBrush", "RedBrush", "YellowBrush"]),
-        ("BORDERS & HOVER",      ["BorderBrush", "HoverBg", "SelectBg", "PressedBg"]),
-        ("LOG ROW BACKGROUNDS",  ["RowErrorBg", "RowWarnBg"]),
-    ];
+        new (string Group, string[] Keys)[]
+        {
+            ("BACKGROUNDS",         new string[] { "BgBrush", "SurfaceBrush", "SubtleBrush" }),
+            ("ACCENT",              new string[] { "AccentBrush", "Accent2Brush" }),
+            ("TEXT",                new string[] { "TextBrush", "TextDimBrush", "MutedBrush" }),
+            ("STATUS",              new string[] { "GreenBrush", "RedBrush", "YellowBrush" }),
+            ("BORDERS & HOVER",     new string[] { "BorderBrush", "HoverBg", "SelectBg", "PressedBg" }),
+            ("LOG ROW BACKGROUNDS", new string[] { "RowErrorBg", "RowWarnBg" }),
+        };
 
     public ThemeEditorWindow(string themeName)
     {

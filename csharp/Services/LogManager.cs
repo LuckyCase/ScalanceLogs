@@ -13,7 +13,7 @@ public static class LogManager
 
     private static string _logDir = "";
     // (key, writer, lastUsedTicks) — small enough that O(N) eviction is fine
-    private static readonly Dictionary<string, (StreamWriter writer, long lastUsed)> Writers = [];
+    private static readonly Dictionary<string, (StreamWriter writer, long lastUsed)> Writers = new Dictionary<string, (StreamWriter writer, long lastUsed)>();
     private static readonly object Lock = new();
     private static string _currentDate = "";
     private static Timer? _cleanupTimer;
@@ -104,13 +104,13 @@ public static class LogManager
                             .OrderBy(f => f)
                             .ToArray()!;
         }
-        catch { return []; }
+        catch { return Array.Empty<string>(); }
     }
 
     public static string[] ReadLines(string filename, int count, string search)
     {
         var safeName = Path.GetFileName(filename);
-        if (string.IsNullOrEmpty(safeName)) return [];
+        if (string.IsNullOrEmpty(safeName)) return Array.Empty<string>();
         var path = Path.Combine(_logDir, safeName);
         try
         {
@@ -128,7 +128,7 @@ public static class LogManager
                 all = all.Where(l => l.Contains(search, StringComparison.OrdinalIgnoreCase));
             return all.TakeLast(count).ToArray();
         }
-        catch { return []; }
+        catch { return Array.Empty<string>(); }
     }
 
     private static string Today() => DateTime.Today.ToString("yyyy-MM-dd");

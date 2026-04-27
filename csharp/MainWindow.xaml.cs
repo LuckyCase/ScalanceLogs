@@ -14,10 +14,10 @@ namespace ScalanceLogs;
 
 public partial class MainWindow : Window
 {
-    private readonly ObservableCollection<LogEntry>  _logEntries  = [];
-    private readonly ObservableCollection<LiveEntry> _liveEntries = [];
-    private readonly ObservableCollection<string>    _activeSw    = [];
-    private readonly ObservableCollection<FileGroup> _fileGroups  = [];
+    private readonly ObservableCollection<LogEntry>  _logEntries  = new ObservableCollection<LogEntry>();
+    private readonly ObservableCollection<LiveEntry> _liveEntries = new ObservableCollection<LiveEntry>();
+    private readonly ObservableCollection<string>    _activeSw    = new ObservableCollection<string>();
+    private readonly ObservableCollection<FileGroup> _fileGroups  = new ObservableCollection<FileGroup>();
 
     private string?  _currentFile;
     private string   _activeQuickFilter = "";
@@ -106,7 +106,7 @@ public partial class MainWindow : Window
                 g.Switches.Add(new FileItem { Display = ip, FileName = f });
             }
         }
-        return [.. map.Values];
+        return map.Values.ToList();
     }
 
     private void FileTree_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)

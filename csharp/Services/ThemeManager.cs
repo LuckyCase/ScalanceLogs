@@ -6,7 +6,7 @@ namespace ScalanceLogs.Services;
 
 public static class ThemeManager
 {
-    public static readonly string[] Available = ["Cyber", "Light", "Midnight", "SlateGlass"];
+    public static readonly string[] Available = new string[] { "Cyber", "Light", "Midnight", "SlateGlass" };
 
     // ── Default palettes ────────────────────────────────────────────
     public static readonly Dictionary<string, Dictionary<string, string>> Defaults = new()

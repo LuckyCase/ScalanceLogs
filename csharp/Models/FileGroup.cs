@@ -6,7 +6,7 @@ public class FileGroup
 {
     public string                   Date        { get; set; } = "";
     public string?                  EventsFile  { get; set; }
-    public ObservableCollection<FileItem> Switches { get; set; } = [];
+    public ObservableCollection<FileItem> Switches { get; set; } = new ObservableCollection<FileItem>();
 
     // Display name for the group header node
     public string Header => EventsFile ?? Date;

@@ -14,15 +14,16 @@ public static class PathValidator
         "ScalanceLogs", "logs");
 
     private static readonly string[] ForbiddenRoots =
-    [
-        Environment.GetFolderPath(Environment.SpecialFolder.Windows),
-        Environment.GetFolderPath(Environment.SpecialFolder.System),
-        Environment.GetFolderPath(Environment.SpecialFolder.SystemX86),
-        Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-        Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
-        Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles),
-        Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFilesX86),
-    ];
+        new string[]
+        {
+            Environment.GetFolderPath(Environment.SpecialFolder.Windows),
+            Environment.GetFolderPath(Environment.SpecialFolder.System),
+            Environment.GetFolderPath(Environment.SpecialFolder.SystemX86),
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles),
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFilesX86),
+        };
 
     /// <summary>
     /// Returns a safe absolute path. If the supplied path is empty, unsafe,

@@ -48,14 +48,14 @@ public class BalloonLabelItem
 public partial class SettingsWindow : Window
 {
     private static readonly string[] StandardLabels =
-        ["EMERG", "ALERT", "CRIT", "ERROR", "WARN", "NOTICE", "INFO", "DEBUG"];
+        new string[] { "EMERG", "ALERT", "CRIT", "ERROR", "WARN", "NOTICE", "INFO", "DEBUG" };
 
-    private readonly ObservableCollection<SwitchNameEntry>  _switches     = [];
-    private readonly ObservableCollection<MessageTypeEntry> _msgTypes     = [];
-    private readonly ObservableCollection<QuickFilterEntry> _quickFilters = [];
-    private readonly ObservableCollection<string>           _patterns     = [];
-    private readonly ObservableCollection<BalloonLabelItem> _balloonItems = [];
-    private readonly ObservableCollection<ThemeCardItem>    _themeCards   = [];
+    private readonly ObservableCollection<SwitchNameEntry>  _switches     = new ObservableCollection<SwitchNameEntry>();
+    private readonly ObservableCollection<MessageTypeEntry> _msgTypes     = new ObservableCollection<MessageTypeEntry>();
+    private readonly ObservableCollection<QuickFilterEntry> _quickFilters = new ObservableCollection<QuickFilterEntry>();
+    private readonly ObservableCollection<string>           _patterns     = new ObservableCollection<string>();
+    private readonly ObservableCollection<BalloonLabelItem> _balloonItems = new ObservableCollection<BalloonLabelItem>();
+    private readonly ObservableCollection<ThemeCardItem>    _themeCards   = new ObservableCollection<ThemeCardItem>();
 
     public SettingsWindow()
     {
@@ -197,13 +197,13 @@ public partial class SettingsWindow : Window
         s.AutoStart            = AutoStartCheck.IsChecked == true;
         s.BalloonNotifications = BalloonCheck.IsChecked   == true;
         s.BalloonLabels        = BalloonAllCheck.IsChecked == true
-                                 ? []
-                                 : [.. _balloonItems.Where(b => b.IsChecked).Select(b => b.Label)];
+                                 ? new List<string>()
+                                 : _balloonItems.Where(b => b.IsChecked).Select(b => b.Label).ToList();
 
-        s.SwitchNames   = [.. _switches];
-        s.EventPatterns = [.. _patterns];
-        s.MessageTypes  = [.. _msgTypes];
-        s.QuickFilters  = [.. _quickFilters];
+        s.SwitchNames   = _switches.ToList();
+        s.EventPatterns = _patterns.ToList();
+        s.MessageTypes  = _msgTypes.ToList();
+        s.QuickFilters  = _quickFilters.ToList();
 
         SettingsService.Save(s);
         AutostartHelper.Set(s.AutoStart);

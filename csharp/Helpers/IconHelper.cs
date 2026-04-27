@@ -73,7 +73,7 @@ public static class IconHelper
 
         // ── Dots (3 circles, r=4, y=62, spaced 17px apart) ────────────────────
         float dr = 4 * s, dy = 62 * s;
-        float[] dotX = [14 * s, 31 * s, 48 * s];
+        float[] dotX = new float[] { 14 * s, 31 * s, 48 * s };
         using var dotBrush = new SolidBrush(DotColor);
         foreach (var dx in dotX)
             g.FillEllipse(dotBrush, dx, dy, dr * 2, dr * 2);
