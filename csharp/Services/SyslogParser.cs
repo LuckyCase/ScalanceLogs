@@ -23,7 +23,7 @@ public static class SyslogParser
     private static readonly Regex SwitchTagRe  = new(@"\(([^)]+)\)", RegexOptions.Compiled);
 
     private static readonly string[] SeverityLabels =
-        ["EMERG", "ALERT", "CRIT", "ERROR", "WARN", "NOTICE", "INFO", "DEBUG"];
+        new string[] { "EMERG", "ALERT", "CRIT", "ERROR", "WARN", "NOTICE", "INFO", "DEBUG" };
 
     // ── Parse raw syslog datagram ────────────────────────────────
     public static (int severity, string hostname, string message)
