@@ -6,7 +6,7 @@ using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
-namespace ScalanceLogs.Helpers;
+namespace SyslogViewer.Helpers;
 
 /// <summary>
 /// Renders the SW-LOG brand icon (rounded square + 3 log bars + 3 dots)

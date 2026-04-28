@@ -1,6 +1,6 @@
 using System.Security.Principal;
 
-namespace ScalanceLogs.Helpers;
+namespace SyslogViewer.Helpers;
 
 public static class AdminHelper
 {

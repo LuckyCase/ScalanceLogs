@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace ScalanceLogs.Helpers;
+namespace SyslogViewer.Helpers;
 
 /// <summary>
 /// Defends against malicious settings.json setting LogPath to a system folder
@@ -8,10 +8,10 @@ namespace ScalanceLogs.Helpers;
 /// </summary>
 public static class PathValidator
 {
-    /// <summary>Default fallback location: %LocalAppData%\ScalanceLogs\logs.</summary>
+    /// <summary>Default fallback location: %LocalAppData%SyslogViewer\logs.</summary>
     public static string DefaultLogDir { get; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "ScalanceLogs", "logs");
+        "SyslogViewer", "logs");
 
     private static readonly string[] ForbiddenRoots =
     [

@@ -1,4 +1,4 @@
-namespace ScalanceLogs.Services;
+namespace SyslogViewer.Services;
 
 public record RawSyslogMessage(string Timestamp, string SrcIp, string Label, int Severity, string Message, string Line);
 

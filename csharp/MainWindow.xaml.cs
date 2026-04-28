@@ -1,5 +1,5 @@
-using ScalanceLogs.Models;
-using ScalanceLogs.Services;
+using SyslogViewer.Models;
+using SyslogViewer.Services;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
@@ -10,7 +10,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Navigation;
 using System.Windows.Threading;
 
-namespace ScalanceLogs;
+namespace SyslogViewer;
 
 public partial class MainWindow : Window
 {

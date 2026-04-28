@@ -1,21 +1,21 @@
 # SW-LOG — Syslog Viewer
 
-[![Build](https://github.com/LuckyCase/ScalanceLogs/actions/workflows/build.yml/badge.svg)](https://github.com/LuckyCase/ScalanceLogs/actions/workflows/build.yml)
-[![Latest release](https://img.shields.io/github/v/release/LuckyCase/ScalanceLogs?include_prereleases&label=download)](https://github.com/LuckyCase/ScalanceLogs/releases/latest)
+[![Build](https://github.com/LuckyCase/SyslogViewer/actions/workflows/build.yml/badge.svg)](https://github.com/LuckyCase/SyslogViewer/actions/workflows/build.yml)
+[![Latest release](https://img.shields.io/github/v/release/LuckyCase/SyslogViewer?include_prereleases&label=download)](https://github.com/LuckyCase/SyslogViewer/releases/latest)
 [![.NET](https://img.shields.io/badge/.NET-6.0%20%7C%209.0-512BD4?logo=dotnet&logoColor=white)](#requirements)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?logo=windows&logoColor=white)](#requirements)
 
-WPF desktop application for collecting and viewing UDP syslog from Siemens Scalance XC-200 industrial switches (and any RFC 5424 / RFC 3164 source).
+WPF desktop application for collecting and viewing UDP syslog from industrial Ethernet switches and any standard syslog source (RFC 5424 / RFC 3164). Tested with Siemens Scalance® XC-200 series.
 
 ```
-Scalance switches  ──UDP──►  SW-LOG  ──►  rotating log files
-                                │
-                          tray icon + WPF UI (live + history)
+Industrial switches  ──UDP──►  SW-LOG  ──►  rotating log files
+                                  │
+                            tray icon + WPF UI (live + history)
 ```
 
 ## Download
 
-Get the latest self-contained build from the [**Releases page**](https://github.com/LuckyCase/ScalanceLogs/releases/latest) — no .NET install needed:
+Get the latest self-contained build from the [**Releases page**](https://github.com/LuckyCase/SyslogViewer/releases/latest) — no .NET install needed:
 
 | File | When to pick |
 |---|---|
@@ -36,7 +36,7 @@ Get the latest self-contained build from the [**Releases page**](https://github.
 
 ## Quick Start
 
-1. Run `ScalanceLogs.exe`
+1. Run `SyslogViewer.exe`
 2. Open **Settings → General** — pick UDP port and log folder
 3. Open **Settings → Switches** — map switch IPs to friendly names
 4. Configure each switch's WBM to send syslog here (see [Switch setup](#switch-wbm-setup))
@@ -80,7 +80,7 @@ Each theme is fully editable: **Edit Colors** opens a per-theme palette editor (
 
 ## Settings
 
-Stored at `%APPDATA%\ScalanceLogs\settings.json`. The UI is the only supported way to edit them — a malformed JSON file is backed up to `settings.json.broken-<timestamp>.bak` and replaced with defaults on next start.
+Stored at `%APPDATA%SyslogViewer\settings.json`. The UI is the only supported way to edit them — a malformed JSON file is backed up to `settings.json.broken-<timestamp>.bak` and replaced with defaults on next start.
 
 ### General
 
@@ -89,7 +89,7 @@ Stored at `%APPDATA%\ScalanceLogs\settings.json`. The UI is the only supported w
 | **UDP Port** | Listener port. 514 = standard syslog (admin). 5140 = unprivileged. |
 | **Test packet** | Sends a sample syslog datagram to the configured port — quick collector self-check. |
 | **Retention (days)** | Files older than this are deleted on startup and daily at midnight. |
-| **Log folder** | Where `.log` files go. Restricted: paths under `C:\Windows`, `Program Files`, etc. fall back to `%LocalAppData%\ScalanceLogs\logs` for safety. |
+| **Log folder** | Where `.log` files go. Restricted: paths under `C:\Windows`, `Program Files`, etc. fall back to `%LocalAppData%SyslogViewer\logs` for safety. |
 | **Start with Windows** | Adds/removes the `HKCU\…\Run` autostart entry. |
 | **Balloon notifications** | Custom WPF toast on new message; per-label opt-in (only WARN+ by default). |
 
@@ -157,7 +157,7 @@ The collector is built to survive a hostile network — UDP is unauthenticated a
 | ReDoS via crafted UDP message against user regex | All user-supplied patterns run with a 50 ms timeout (`SafeRegex`) and are compiled & cached. |
 | File-handle exhaustion via spoofed source IPs | LRU cap on open writers (64); least-recently-used are evicted under pressure. |
 | UDP flood → disk I/O DOS | Receive thread is decoupled from disk via a bounded `Channel<>` (4096 capacity, drop-on-full). Oversize datagrams (>8 KB) are rejected. |
-| Path traversal via malicious `settings.json` | `LogPath` is validated; system folders are refused, fallback is `%LocalAppData%\ScalanceLogs\logs`. Filenames are sanitised on every write/read. |
+| Path traversal via malicious `settings.json` | `LogPath` is validated; system folders are refused, fallback is `%LocalAppData%SyslogViewer\logs`. Filenames are sanitised on every write/read. |
 | Hyperlink injection in the Host column | Only valid IPv4 strings become clickable links; the navigate handler additionally validates the scheme is `https` and the host parses as an `IPAddress`. |
 | Single-instance race | Named mutex with proper release on dispose. |
 
@@ -174,8 +174,8 @@ dotnet build csharp -c Release
 ```
 
 Output:
-- `csharp\bin\Release\net6.0-windows\ScalanceLogs.exe`
-- `csharp\bin\Release\net9.0-windows\ScalanceLogs.exe`
+- `csharp\bin\Release\net6.0-windows\SyslogViewer.exe`
+- `csharp\bin\Release\net9.0-windows\SyslogViewer.exe`
 
 Build a single TFM:
 ```

@@ -1,9 +1,9 @@
-using ScalanceLogs.Helpers;
+using SyslogViewer.Helpers;
 using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace ScalanceLogs.Converters;
+namespace SyslogViewer.Converters;
 
 [ValueConversion(typeof(string), typeof(Brush))]
 public class HexToBrushConverter : IValueConverter

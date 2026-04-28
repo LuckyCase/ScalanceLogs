@@ -1,9 +1,9 @@
-using ScalanceLogs.Helpers;
+using SyslogViewer.Helpers;
 using System.IO;
 using System.Text;
 using Timer = System.Threading.Timer;
 
-namespace ScalanceLogs.Services;
+namespace SyslogViewer.Services;
 
 public static class LogManager
 {

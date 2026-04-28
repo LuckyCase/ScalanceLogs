@@ -13,7 +13,7 @@ LISTEN_PORT = 514          # standard Syslog UDP port
 # ─── Logs ─────────────────────────────────────────────────────
 from pathlib import Path
 _HERE = Path(__file__).parent        # python/
-_ROOT = _HERE.parent                 # project root (ScalanceLogs/)
+_ROOT = _HERE.parent                 # project root (SyslogViewer/)
 
 # Relative to project root:  str(_ROOT / "logs")
 # Absolute path:              r"C:\Logs\SW-Log"

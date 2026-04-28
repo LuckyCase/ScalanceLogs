@@ -1,7 +1,7 @@
 # =============================================================
-#  scalance_collector.ps1
+#  syslog_collector.ps1
 #  Industrial Syslog Collector - PowerShell edition
-#  Run:    powershell -ExecutionPolicy Bypass -File scalance_collector.ps1
+#  Run:    powershell -ExecutionPolicy Bypass -File syslog_collector.ps1
 #  Rights: Administrator required for port 514
 #          Alternatively change PORT to 5140 in config.ps1
 # =============================================================

@@ -1,4 +1,4 @@
-namespace ScalanceLogs.Helpers;
+namespace SyslogViewer.Helpers;
 
 public sealed class SingleInstance : IDisposable
 {

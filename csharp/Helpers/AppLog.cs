@@ -1,7 +1,7 @@
 using System.IO;
 using System.Reflection;
 
-namespace ScalanceLogs.Helpers;
+namespace SyslogViewer.Helpers;
 
 /// <summary>
 /// Per-session diagnostic log written next to the exe (or to %LocalAppData%
@@ -71,10 +71,10 @@ public static class AppLog
         }
         catch
         {
-            // Fallback: %LocalAppData%\ScalanceLogs\app.log
+            // Fallback: %LocalAppData%SyslogViewer\app.log
             return System.IO.Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "ScalanceLogs", "app.log");
+                "SyslogViewer", "app.log");
         }
     }
 }

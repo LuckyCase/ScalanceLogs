@@ -1,8 +1,8 @@
-using ScalanceLogs.Helpers;
+using SyslogViewer.Helpers;
 using System.Windows;
 using System.Windows.Media;
 
-namespace ScalanceLogs.Services;
+namespace SyslogViewer.Services;
 
 public static class ThemeManager
 {

@@ -11,7 +11,7 @@ Log files are named with the current date, e.g.:
 A new file is created automatically each day.
 Files older than LOG_ROTATE_DAYS are deleted at startup and daily at midnight.
 
-Run:    python scalance_collector.py
+Run:    python syslog_collector.py
 Rights: administrator (for port 514) or change port to 5140 in config.py
 """
 

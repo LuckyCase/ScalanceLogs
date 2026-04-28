@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 
-namespace ScalanceLogs.Helpers;
+namespace SyslogViewer.Helpers;
 
 /// <summary>
 /// Compiled, cached regex with a hard timeout. Defeats ReDoS attacks

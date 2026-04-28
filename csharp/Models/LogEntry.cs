@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace ScalanceLogs.Models;
+namespace SyslogViewer.Models;
 
 public class LogEntry : INotifyPropertyChanged
 {

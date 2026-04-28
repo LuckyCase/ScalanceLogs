@@ -1,11 +1,11 @@
-using ScalanceLogs.Helpers;
-using ScalanceLogs.Models;
-using ScalanceLogs.Services;
+using SyslogViewer.Helpers;
+using SyslogViewer.Models;
+using SyslogViewer.Services;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Forms;
 
-namespace ScalanceLogs;
+namespace SyslogViewer;
 
 public partial class App : Application
 {
@@ -46,11 +46,11 @@ public partial class App : Application
             args.SetObserved();
         };
 
-        _singleInstance = new SingleInstance("ScalanceLogs_Mutex_v1");
+        _singleInstance = new SingleInstance("SyslogViewer_Mutex_v1");
         if (!_singleInstance.IsOwner)
         {
             AppLog.Info("Another instance is already running — exiting.");
-            MessageBox.Show("ScalanceLogs already running.", "ScalanceLogs",
+            MessageBox.Show("SW-LOG already running.", "SW-LOG",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             Shutdown();
             return;
@@ -94,7 +94,7 @@ public partial class App : Application
         {
             Icon    = _trayIconBitmap,
             Visible = true,
-            Text    = "ScalanceLogs — Syslog Collector",
+            Text    = "SW-LOG — Syslog Viewer",
         };
 
         _trayIcon.DoubleClick += (_, _) => ShowMain();

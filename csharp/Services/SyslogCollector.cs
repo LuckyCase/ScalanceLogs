@@ -1,10 +1,10 @@
-using ScalanceLogs.Helpers;
+using SyslogViewer.Helpers;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Channels;
 
-namespace ScalanceLogs.Services;
+namespace SyslogViewer.Services;
 
 public class SyslogCollector
 {
@@ -40,7 +40,7 @@ public class SyslogCollector
             _ = System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                 System.Windows.MessageBox.Show(
                     $"Port {port} requires administrator rights.\n\nRun as Administrator or change port to 5140 in Settings.",
-                    "ScalanceLogs — Permission Error",
+                    "SW-LOG — Permission Error",
                     System.Windows.MessageBoxButton.OK,
                     System.Windows.MessageBoxImage.Warning));
             writer.Complete();
@@ -77,7 +77,7 @@ public class SyslogCollector
             _ = System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                 System.Windows.MessageBox.Show(
                     $"Cannot bind UDP port {port}:\n{ex.Message}",
-                    "ScalanceLogs — Socket Error",
+                    "SW-LOG — Socket Error",
                     System.Windows.MessageBoxButton.OK,
                     System.Windows.MessageBoxImage.Error));
         }

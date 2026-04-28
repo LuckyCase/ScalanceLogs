@@ -1,6 +1,6 @@
 # =============================================================
 #  Industrial Syslog Collector - configuration
-#  Loaded by scalance_collector.ps1 and viewer_server.ps1
+#  Loaded by syslog_collector.ps1 and viewer_server.ps1
 # =============================================================
 
 # --- Network --------------------------------------------------

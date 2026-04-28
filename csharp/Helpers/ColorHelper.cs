@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using SolidColorBrush = System.Windows.Media.SolidColorBrush;
 
-namespace ScalanceLogs.Helpers;
+namespace SyslogViewer.Helpers;
 
 public static class ColorHelper
 {

@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 
-namespace ScalanceLogs.Models;
+namespace SyslogViewer.Models;
 
 public class FileGroup
 {

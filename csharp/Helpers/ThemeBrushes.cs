@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace ScalanceLogs.Helpers;
+namespace SyslogViewer.Helpers;
 
 /// <summary>
 /// Snapshot of theme brushes used by the syslog parser hot-path.

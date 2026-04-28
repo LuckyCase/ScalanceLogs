@@ -1,11 +1,11 @@
 using Microsoft.Win32;
 
-namespace ScalanceLogs.Helpers;
+namespace SyslogViewer.Helpers;
 
 public static class AutostartHelper
 {
     private const string RegPath = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
-    private const string AppName = "ScalanceLogs";
+    private const string AppName = "SyslogViewer";
 
     public static void Set(bool enabled)
     {

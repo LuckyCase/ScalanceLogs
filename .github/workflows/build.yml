@@ -32,10 +32,10 @@ jobs:
             9.0.x
 
       - name: Restore
-        run: dotnet restore csharp/ScalanceLogs.csproj
+        run: dotnet restore csharp/SyslogViewer.csproj
 
       - name: Build (Release, both target frameworks)
-        run: dotnet build csharp/ScalanceLogs.csproj -c Release --no-restore
+        run: dotnet build csharp/SyslogViewer.csproj -c Release --no-restore
 
       # ── Tag-only steps below: publish self-contained binaries and cut a Release ──
 
@@ -44,7 +44,7 @@ jobs:
       - name: Publish self-contained — net6
         if: startsWith(github.ref, 'refs/tags/')
         run: >
-          dotnet publish csharp/ScalanceLogs.csproj -c Release
+          dotnet publish csharp/SyslogViewer.csproj -c Release
           -f net6.0-windows -r win-x64 --self-contained true
           -p:PublishSingleFile=true
           -p:EnableCompressionInSingleFile=true
@@ -55,7 +55,7 @@ jobs:
       - name: Publish self-contained — net9
         if: startsWith(github.ref, 'refs/tags/')
         run: >
-          dotnet publish csharp/ScalanceLogs.csproj -c Release
+          dotnet publish csharp/SyslogViewer.csproj -c Release
           -f net9.0-windows -r win-x64 --self-contained true
           -p:PublishSingleFile=true
           -p:EnableCompressionInSingleFile=true
@@ -69,8 +69,8 @@ jobs:
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
-          Compress-Archive -Path publish/net6/ScalanceLogs.exe -DestinationPath "SW-LOG-$tag-net6-win-x64.zip"
-          Compress-Archive -Path publish/net9/ScalanceLogs.exe -DestinationPath "SW-LOG-$tag-net9-win-x64.zip"
+          Compress-Archive -Path publish/net6/SyslogViewer.exe -DestinationPath "SW-LOG-$tag-net6-win-x64.zip"
+          Compress-Archive -Path publish/net9/SyslogViewer.exe -DestinationPath "SW-LOG-$tag-net9-win-x64.zip"
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')

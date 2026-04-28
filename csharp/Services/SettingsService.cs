@@ -1,15 +1,15 @@
-using ScalanceLogs.Helpers;
-using ScalanceLogs.Models;
+using SyslogViewer.Helpers;
+using SyslogViewer.Models;
 using System.IO;
 using System.Text.Json;
 
-namespace ScalanceLogs.Services;
+namespace SyslogViewer.Services;
 
 public static class SettingsService
 {
     private static readonly string Path = System.IO.Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "ScalanceLogs", "settings.json");
+        "SyslogViewer", "settings.json");
 
     private static readonly JsonSerializerOptions Opts = new() { WriteIndented = true };
 

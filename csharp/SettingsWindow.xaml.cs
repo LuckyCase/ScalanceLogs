@@ -1,6 +1,6 @@
-using ScalanceLogs.Helpers;
-using ScalanceLogs.Models;
-using ScalanceLogs.Services;
+using SyslogViewer.Helpers;
+using SyslogViewer.Models;
+using SyslogViewer.Services;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
 
-namespace ScalanceLogs;
+namespace SyslogViewer;
 
 // ── Theme card view-model ─────────────────────────────────────────────
 
@@ -303,7 +303,7 @@ public partial class SettingsWindow : Window
         }
 
         var ts   = DateTime.Now.ToString("MMM dd HH:mm:ss", CultureInfo.InvariantCulture);
-        var raw  = $"<133>{ts} 127.0.0.1 ScalanceLogs: test packet from Settings (port {port})";
+        var raw  = $"<133>{ts} 127.0.0.1 SyslogViewer: test packet from Settings (port {port})";
         var data = Encoding.UTF8.GetBytes(raw);
 
         try

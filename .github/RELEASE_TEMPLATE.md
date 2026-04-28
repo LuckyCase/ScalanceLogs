@@ -27,14 +27,14 @@
 | `SW-LOG-vX.Y.Z-net6-win-x64.zip` | If your environment is locked to .NET 6 |
 
 Both archives are **self-contained** — no .NET runtime install required.
-Unzip and run `ScalanceLogs.exe`.
+Unzip and run `SyslogViewer.exe`.
 
 ### Verifying
 
 ```powershell
-Get-FileHash .\ScalanceLogs.exe -Algorithm SHA256
+Get-FileHash .\SyslogViewer.exe -Algorithm SHA256
 ```
 
 ### Upgrading
 
-Settings live at `%APPDATA%\ScalanceLogs\settings.json` and are preserved between versions.
+Settings live at `%APPDATA%SyslogViewer\settings.json` and are preserved between versions.

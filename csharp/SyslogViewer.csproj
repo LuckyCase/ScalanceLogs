@@ -13,12 +13,12 @@
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-    <AssemblyName>ScalanceLogs</AssemblyName>
-    <RootNamespace>ScalanceLogs</RootNamespace>
-    <StartupObject>ScalanceLogs.App</StartupObject>
+    <AssemblyName>SyslogViewer</AssemblyName>
+    <RootNamespace>SyslogViewer</RootNamespace>
+    <StartupObject>SyslogViewer.App</StartupObject>
     <AssemblyTitle>SW-LOG Syslog Viewer</AssemblyTitle>
     <Product>SW-LOG</Product>
-    <Description>Industrial syslog collector and viewer for Scalance switches</Description>
+    <Description>Industrial syslog collector and viewer (RFC 5424/3164) — compatible with Siemens Scalance switches</Description>
     <Company>IVTI</Company>
     <AssemblyVersion>0.0.1.0</AssemblyVersion>
     <FileVersion>0.0.1.0</FileVersion>

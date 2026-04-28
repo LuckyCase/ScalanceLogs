@@ -1,8 +1,8 @@
-using ScalanceLogs.Helpers;
-using ScalanceLogs.Models;
+using SyslogViewer.Helpers;
+using SyslogViewer.Models;
 using System.Text.RegularExpressions;
 
-namespace ScalanceLogs.Services;
+namespace SyslogViewer.Services;
 
 public static class SyslogParser
 {
