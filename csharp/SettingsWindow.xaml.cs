@@ -79,8 +79,9 @@ public partial class SettingsWindow : Window
         PortBox.Text      = s.UdpPort.ToString();
         RetentionBox.Text = s.LogRetentionDays.ToString();
         LogPathBox.Text   = s.LogPath;
-        AutoStartCheck.IsChecked = s.AutoStart;
-        BalloonCheck.IsChecked   = s.BalloonNotifications;
+        AutoStartCheck.IsChecked  = s.AutoStart;
+        BalloonCheck.IsChecked    = s.BalloonNotifications;
+        StrictModeCheck.IsChecked = s.StrictMode;
 
         // Theme cards
         RebuildThemeCards(s.Theme);
@@ -194,8 +195,9 @@ public partial class SettingsWindow : Window
         s.UdpPort              = port;
         s.LogRetentionDays     = days;
         s.LogPath              = LogPathBox.Text.Trim();
-        s.AutoStart            = AutoStartCheck.IsChecked == true;
-        s.BalloonNotifications = BalloonCheck.IsChecked   == true;
+        s.AutoStart            = AutoStartCheck.IsChecked  == true;
+        s.BalloonNotifications = BalloonCheck.IsChecked    == true;
+        s.StrictMode           = StrictModeCheck.IsChecked == true;
         s.BalloonLabels        = BalloonAllCheck.IsChecked == true
                                  ? []
                                  : [.. _balloonItems.Where(b => b.IsChecked).Select(b => b.Label)];

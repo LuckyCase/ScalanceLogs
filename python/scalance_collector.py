@@ -113,33 +113,75 @@ def is_event(message: str) -> bool:
         return True
     return any(p.search(message) for p in EVENT_PATTERNS)
 
-# ─── Syslog RFC 3164 parser ───────────────────────────────────
-SYSLOG_RE = re.compile(
+# ─── Syslog parsers (RFC 5424 first, RFC 3164 fallback) ──────
+# RFC 5424:  <PRI>VERSION TIMESTAMP HOSTNAME APP-NAME PROCID MSGID [SD] MSG
+RFC5424_RE = re.compile(
+    r"^<(\d+)>\d+\s+\S+\s+(\S+)\s+\S+\s+\S+\s+\S+\s+(.*)$"
+)
+# RFC 3164:  <PRI>Mmm DD HH:MM:SS HOSTNAME MSG
+RFC3164_RE = re.compile(
     r"^<(\d+)>(\w{3}\s+\d+\s+[\d:]+)\s+([\w.\-]+)\s+(.*)$"
 )
 
+def _strip_sd(s: str) -> str:
+    """Strip RFC 5424 STRUCTURED-DATA: '-' or one or more '[ID …]' blocks."""
+    s = s.lstrip()
+    if s == "-":      return ""
+    if s.startswith("- "): return s[2:].lstrip()
+    while s.startswith("["):
+        end = s.find("]")
+        if end < 0: break
+        s = s[end + 1:].lstrip()
+    return s
+
 def parse_syslog(raw: str, src_ip: str) -> dict:
-    m = SYSLOG_RE.match(raw)
+    """
+    Returns dict with keys: ts, src_ip, hostname, severity, message.
+    `message` is the clean human MSG (header + [SD] stripped) — used for
+    event-filter matching. The full raw packet is preserved separately and
+    written to the file as-is (so users can see device timestamp, app-name,
+    sysUpTime via the viewer's expand row).
+    """
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    if m:
-        priority, dev_ts, hostname, message = m.groups()
-        severity = int(priority) & 0x07
-    else:
-        severity = 6
-        hostname  = src_ip
-        message   = raw
+
+    # RFC 5424 first
+    m5 = RFC5424_RE.match(raw)
+    if m5:
+        priority, hostname, rest = m5.groups()
+        return {
+            "ts":       now,
+            "src_ip":   src_ip,
+            "hostname": hostname,
+            "severity": int(priority) & 0x07,
+            "message":  _strip_sd(rest),
+        }
+
+    # RFC 3164 fallback
+    m3 = RFC3164_RE.match(raw)
+    if m3:
+        priority, _dev_ts, hostname, message = m3.groups()
+        return {
+            "ts":       now,
+            "src_ip":   src_ip,
+            "hostname": hostname,
+            "severity": int(priority) & 0x07,
+            "message":  message,
+        }
+
+    # Unknown format
     return {
         "ts":       now,
         "src_ip":   src_ip,
-        "hostname": hostname,
-        "severity": severity,
-        "message":  message,
+        "hostname": src_ip,
+        "severity": 6,
+        "message":  raw,
     }
 
-def format_line(p: dict) -> str:
+def format_line(p: dict, raw: str) -> str:
+    """Writes the full raw packet to disk, but with a normalized prefix."""
     label = host_label(p["src_ip"])
     sev   = severity_label(p["severity"])
-    return f"{p['ts']} [{sev:6s}] {label} | {p['message']}"
+    return f"{p['ts']} [{sev:6s}] {label} | {raw}"
 
 # ─── UDP handler ──────────────────────────────────────────────
 class SyslogHandler(socketserver.BaseRequestHandler):
@@ -148,11 +190,13 @@ class SyslogHandler(socketserver.BaseRequestHandler):
         src_ip = self.client_address[0]
 
         parsed = parse_syslog(raw, src_ip)
-        line   = format_line(parsed)
+        line   = format_line(parsed, raw)   # full raw packet stored in file
 
         name = SWITCH_NAMES.get(src_ip, src_ip)
         get_host_logger(src_ip, name).info(line)
 
+        # Event filter runs against the clean payload, not the raw packet,
+        # so a pattern like 'meta' won't accidentally match every message.
         if is_event(parsed["message"]):
             get_events_logger().info(line)
             print(line)

@@ -8,7 +8,7 @@ public static class SyslogParser
 {
     // RFC 5424 (modern Scalance, Cisco IOS-XE, …):
     //   <PRI>VERSION TIMESTAMP HOSTNAME APP-NAME PROCID MSGID [SD] MSG
-    //   <134>1 2026-04-27T10:14:24+00:00 PN-SW01 6GK5216-4BS00-2AC2 69 - [meta …] Link down on P0.2.
+    //   <134>1 2026-04-27T10:14:24+00:00 SW-01 6GK5216-4BS00-2AC2 69 - [meta …] Link down on P0.2.
     private static readonly Regex Rfc5424Re = new(
         @"^<(\d+)>\d+\s+\S+\s+(\S+)\s+\S+\s+\S+\s+\S+\s+(.*)$",
         RegexOptions.Compiled);
@@ -174,23 +174,29 @@ public static class SyslogParser
             hostSuffix = host;
         }
 
+        // "Unregistered" = the source IP isn't in the user's SwitchNames list.
+        // Non-IP host strings are treated as registered (no way to know).
+        var isUnreg = !string.IsNullOrEmpty(ipPart) &&
+                      !App.Settings.SwitchNames.Any(s => s.Ip == ipPart);
+
         return new LogEntry
         {
-            Raw          = rawPart,
-            Timestamp    = ts,
-            Severity     = sevStr,        // ← original severity (used for stats)
-            SeverityText = sevStr,
-            Host         = host,
-            IpPart       = ipPart,
-            HostSuffix   = hostSuffix,
-            Message      = msg,
-            ChipLabel    = chipLbl,       // ← may be overridden by MessageType
-            ChipFg       = chipFg,
-            ChipBg       = chipBg,
-            RowBg        = rowBg,
-            RowBorder    = rowBorder,
-            IsLinkDown   = isDown,
-            IsLinkUp     = isUp,
+            Raw            = rawPart,
+            Timestamp      = ts,
+            Severity       = sevStr,        // ← original severity (used for stats)
+            SeverityText   = sevStr,
+            Host           = host,
+            IpPart         = ipPart,
+            HostSuffix     = hostSuffix,
+            Message        = msg,
+            ChipLabel      = chipLbl,       // ← may be overridden by MessageType
+            ChipFg         = chipFg,
+            ChipBg         = chipBg,
+            RowBg          = rowBg,
+            RowBorder      = rowBorder,
+            IsLinkDown     = isDown,
+            IsLinkUp       = isUp,
+            IsUnregistered = isUnreg,
         };
     }
 

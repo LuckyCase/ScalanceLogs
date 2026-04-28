@@ -102,14 +102,23 @@ public class SyslogCollector
         var (severity, _, payload) = SyslogParser.ParseRaw(raw, srcIp);
         var sevLabel = SyslogParser.SeverityLabel(severity);
 
-        var name  = App.Settings.SwitchNames.FirstOrDefault(s => s.Ip == srcIp)?.Name ?? srcIp;
-        var label = (name != srcIp) ? $"{srcIp} ({name})" : srcIp;
+        var entry = App.Settings.SwitchNames.FirstOrDefault(s => s.Ip == srcIp);
+        var isRegistered = entry != null;
+        var name  = entry?.Name ?? srcIp;
+        var label = isRegistered ? $"{srcIp} ({name})" : srcIp;
         var today = DateTime.Today.ToString("yyyy-MM-dd");
         var ts    = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         var line  = $"{ts} [{sevLabel,-6}] {label} | {raw}";
 
+        // ── Strict mode: divert unregistered sources to a separate audit log ──────
+        if (App.Settings.StrictMode && !isRegistered)
+        {
+            LogManager.Write($"unknown_{today}", $"unknown_sources_{today}.log", line);
+            return;  // do NOT publish to UI, do NOT touch per-host or events files
+        }
+
         var safeIp   = srcIp.Replace('.', '_');
-        var fileBase = (name != srcIp) ? $"{safeIp}_{name}" : safeIp;
+        var fileBase = isRegistered ? $"{safeIp}_{name}" : safeIp;
         LogManager.Write($"host_{fileBase}_{today}", $"{fileBase}_{today}.log", line);
 
         var msg = new RawSyslogMessage(ts, srcIp, label, severity, payload, line);

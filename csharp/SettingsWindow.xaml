@@ -66,6 +66,10 @@
                             </ComboBox>
                         </Grid>
 
+                        <CheckBox x:Name="StrictModeCheck" Margin="0 0 0 8"
+                                  Content="Strict mode — divert unregistered IPs to unknown_sources.log"
+                                  ToolTip="When enabled, packets from IPs not in the Switches list are written to a separate audit log and excluded from the main feed."/>
+
                         <!-- Test packet -->
                         <Grid Margin="0 8 0 0">
                             <Grid.ColumnDefinitions>

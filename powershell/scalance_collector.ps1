@@ -49,7 +49,23 @@ function Get-EventsLogPath {
     return Get-DatedLogPath "events"
 }
 
-# --- Parse Syslog RFC 3164 ------------------------------------
+# --- Strip RFC 5424 STRUCTURED-DATA: '-' or one or more '[ID …]' blocks --
+function Strip-SD($s) {
+    $s = $s.TrimStart()
+    if ($s -eq '-')        { return '' }
+    if ($s.StartsWith('- ')) { return $s.Substring(2).TrimStart() }
+    while ($s.StartsWith('[')) {
+        $end = $s.IndexOf(']')
+        if ($end -lt 0) { break }
+        $s = $s.Substring($end + 1).TrimStart()
+    }
+    return $s
+}
+
+# --- Parse Syslog (RFC 5424 first, RFC 3164 fallback) ---------
+# Returns a hashtable. `Message` is the clean human MSG used for the event
+# filter — the full raw packet is preserved separately and written to disk
+# as-is so the operator can inspect it via the viewer's expand row.
 function Parse-Syslog($raw, $srcIP) {
     $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $result = @{
@@ -58,6 +74,13 @@ function Parse-Syslog($raw, $srcIP) {
         Severity = 6
         Message  = $raw
     }
+    # RFC 5424: <PRI>VERSION TIMESTAMP HOSTNAME APP-NAME PROCID MSGID [SD] MSG
+    if ($raw -match '^<(\d+)>\d+\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+(.*)$') {
+        $result.Severity = [int]$Matches[1] -band 0x07
+        $result.Message  = Strip-SD $Matches[2]
+        return $result
+    }
+    # RFC 3164 fallback
     if ($raw -match '^<(\d+)>\w{3}\s+\d+\s+[\d:]+\s+[\w.\-]+\s+(.*)$') {
         $result.Severity = [int]$Matches[1] -band 0x07
         $result.Message  = $Matches[2]
@@ -143,7 +166,9 @@ try {
         $parsed = Parse-Syslog $raw $srcIP
         $label  = Get-HostLabel $srcIP
         $sevStr = $SEVERITY_LABELS[$parsed.Severity]
-        $line   = "$($parsed.Ts) [$("{0,-6}" -f $sevStr)] $label | $($parsed.Message)"
+        # Write the FULL raw packet to disk (consistent with the C# version);
+        # event-filter matching still uses the clean Message field below.
+        $line   = "$($parsed.Ts) [$("{0,-6}" -f $sevStr)] $label | $raw"
 
         Write-LogLine (Get-HostLogPath $srcIP) $line
 

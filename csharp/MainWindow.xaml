@@ -259,10 +259,15 @@
                                                        Foreground="{Binding ChipFg}"
                                                        FontFamily="Consolas" FontSize="11"/>
                                         </Border>
-                                        <!-- Host: IP as hyperlink + suffix -->
+                                        <!-- Host: IP as hyperlink + suffix
+                                             Registered  → cyan hyperlink to https://<ip>
+                                             Unregistered → italic dim text + ⓘ tooltip
+                                        -->
                                         <StackPanel Grid.Column="3" Orientation="Horizontal"
                                                     VerticalAlignment="Center">
-                                            <TextBlock FontFamily="Consolas" FontSize="12">
+                                            <!-- Registered: clickable hyperlink -->
+                                            <TextBlock FontFamily="Consolas" FontSize="12"
+                                                       Visibility="{Binding IsUnregistered, Converter={StaticResource InvBoolToVis}}">
                                                 <Hyperlink NavigateUri="{Binding IpPart,
                                                            StringFormat='https://{0}'}"
                                                            RequestNavigate="Hyperlink_Navigate"
@@ -272,7 +277,20 @@
                                             </TextBlock>
                                             <TextBlock Text="{Binding HostSuffix}"
                                                        FontFamily="Consolas" FontSize="12"
-                                                       Foreground="{DynamicResource AccentBrush}"/>
+                                                       Foreground="{DynamicResource AccentBrush}"
+                                                       Visibility="{Binding IsUnregistered, Converter={StaticResource InvBoolToVis}}"/>
+
+                                            <!-- Unregistered: plain italic dim text + ⓘ marker -->
+                                            <TextBlock Text="{Binding IpPart}"
+                                                       FontFamily="Consolas" FontSize="12"
+                                                       FontStyle="Italic"
+                                                       Foreground="{DynamicResource TextDimBrush}"
+                                                       Visibility="{Binding IsUnregistered, Converter={StaticResource BoolToVis}}"/>
+                                            <TextBlock Text=" ⓘ" FontSize="11"
+                                                       Foreground="{DynamicResource MutedBrush}"
+                                                       Cursor="Help"
+                                                       ToolTip="Unregistered switch — add a friendly name in Settings → Switches"
+                                                       Visibility="{Binding IsUnregistered, Converter={StaticResource BoolToVis}}"/>
                                         </StackPanel>
                                         <TextBlock Grid.Column="4"
                                                    Text="{Binding Message}"

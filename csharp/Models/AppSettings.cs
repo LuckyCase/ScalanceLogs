@@ -11,6 +11,9 @@ public class AppSettings
     public bool   AutoStart         { get; set; } = false;
     public string Theme             { get; set; } = "Cyber";
     public bool   BalloonNotifications { get; set; } = true;
+    // Strict mode: if true, packets from IPs not in SwitchNames are diverted to
+    // unknown_sources_YYYY-MM-DD.log and excluded from the live feed / per-host files.
+    public bool   StrictMode        { get; set; } = false;
     // Labels that trigger balloon. Empty = ALL messages.
     public List<string> BalloonLabels { get; set; } = ["EMERG", "ALERT", "CRIT", "ERROR",
                                                         "LINK DOWN", "LINK UP"];

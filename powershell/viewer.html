@@ -482,6 +482,17 @@
     border-bottom: 1px dashed var(--accent2);
     transition: color 0.15s, border-color 0.15s;
   }
+  .ip-unreg {
+    color: var(--text-dim);
+    font-style: italic;
+  }
+  .ip-mark {
+    color: var(--muted);
+    cursor: help;
+    margin-left: 2px;
+    user-select: none;
+  }
+  .ip-mark:hover { color: var(--accent); }
   .ip-link:hover { color: #fff; border-bottom-color: var(--accent); }
 
   .sev-chip {
@@ -891,7 +902,7 @@ function groupFiles(files) {
       groups.get(d).eventsFile = f;
       continue;
     }
-    // e.g. 192_168_179_11_PN-SW01_2026-04-18.log
+    // e.g. 192_168_1_10_SW-01_2026-04-18.log
     const swM = f.match(/^((?:\d+_){3}\d+)_(.+)_(\d{4}-\d{2}-\d{2})\.log$/);
     if (swM) {
       const [, , name, date] = swM;
@@ -1002,11 +1013,20 @@ async function loadLog() {
   }
 }
 
-// ── Render host cell: IP as clickable link ──────────────────────
+// ── Render host cell ────────────────────────────────────────────
+//   Registered  ("192.168.1.10 (SW-01)") → clickable link to https://<ip> + suffix
+//   Unregistered ("192.168.1.99")        → italic dim text + ⓘ tooltip
 function renderHost(host) {
   const m = host.match(/^(\d+\.\d+\.\d+\.\d+)(.*)/);
   if (!m) return escapeHtml(host);
-  return `<a class="ip-link" href="https://${escapeHtml(m[1])}" target="_blank" rel="noopener">${escapeHtml(m[1])}</a>${escapeHtml(m[2])}`;
+  const ip      = m[1];
+  const suffix  = m[2];
+  const named   = /\([^)]+\)/.test(suffix);
+  if (named) {
+    return `<a class="ip-link" href="https://${escapeHtml(ip)}" target="_blank" rel="noopener">${escapeHtml(ip)}</a>${escapeHtml(suffix)}`;
+  }
+  return `<span class="ip-unreg">${escapeHtml(ip)}</span>` +
+         `<span class="ip-mark" title="Unregistered switch — add a friendly name in config">ⓘ</span>`;
 }
 
 // ── Extract useful message from raw syslog ──────────────────────

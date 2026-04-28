@@ -194,13 +194,21 @@ Requires .NET 9 SDK to build (the SDK can target both net6 and net9).
 ## Project Layout
 
 ```
-csharp\           ← WPF application (this is the main project)
-python\           ← legacy: Python collector + HTTP viewer
-powershell\       ← legacy: PowerShell collector + HTTP viewer
+csharp\           ← WPF desktop app — recommended for day-to-day use (GUI)
+python\           ← Python collector + HTTP viewer — headless / cross-platform
+powershell\       ← PowerShell collector + HTTP viewer — zero-dependency on Windows
 logs\             ← runtime output (gitignored)
 ```
 
-The Python and PowerShell implementations write the **same** log file format and can co-exist on the same `logs\` folder. The WPF app supersedes them for day-to-day use.
+All three implementations write **byte-identical log files** and can share the same `logs\` folder. Pick whichever fits your environment:
+
+| Use the… | …if you need |
+|---|---|
+| **C# WPF app** | A desktop GUI with live feed, themes, toasts |
+| **Python collector** | A headless service, cross-platform, easy to deploy as a systemd unit / scheduled task |
+| **PowerShell collector** | Zero install on Windows — runs on built-in PowerShell, no .NET / Python required |
+
+The Python and PowerShell viewers (`viewer.html` in each folder) are static HTML pages — open them in any browser to read the same `logs\` folder.
 
 ---
 

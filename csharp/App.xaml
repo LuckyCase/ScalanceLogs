@@ -11,6 +11,7 @@
 
             <!-- ── Converters ─────────────────────────────────── -->
             <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
+            <conv:InverseBoolToVisibilityConverter x:Key="InvBoolToVis"/>
             <conv:BoolToStringConverter TrueValue="▾" FalseValue="▸" x:Key="ExpandArrow"/>
             <conv:HexToBrushConverter x:Key="HexToBrush"/>
 
@@ -310,7 +311,7 @@
                 <Setter Property="FontSize"        Value="12"/>
             </Style>
             <Style TargetType="TreeViewItem">
-                <Setter Property="IsExpanded" Value="True"/>
+                <Setter Property="IsExpanded" Value="False"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
                 <Setter Property="Template">
                     <Setter.Value>

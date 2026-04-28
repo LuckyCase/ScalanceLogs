@@ -11,6 +11,7 @@ public class LogEntry : INotifyPropertyChanged
     public string SeverityText { get; set; } = "INFO";   // shown text (legacy)
     public bool   IsLinkDown   { get; set; }
     public bool   IsLinkUp     { get; set; }
+    public bool   IsUnregistered { get; set; }   // true = src IP not in SwitchNames
     public string Host         { get; set; } = "";
     public string IpPart       { get; set; } = "";
     public string HostSuffix   { get; set; } = "";

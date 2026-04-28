@@ -1,5 +1,17 @@
+# Runtime data
 logs/
 color_preview/
+
+# IDE / editor
+.claude/
+.vs/
+.vscode/
+
+# Build output (.NET)
+csharp/bin/
+csharp/obj/
+
+# Python
 __pycache__/
 *.pyc
 *.pyo
