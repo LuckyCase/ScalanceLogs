@@ -40,7 +40,7 @@ jobs:
       # ── Tag-only steps below: publish self-contained binaries and cut a Release ──
 
       - name: Publish self-contained — net6
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         run: >
           dotnet publish csharp/ScalanceLogs.csproj -c Release
           -f net6.0-windows -r win-x64 --self-contained true
@@ -48,7 +48,7 @@ jobs:
           -o publish/net6
 
       - name: Publish self-contained — net9
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         run: >
           dotnet publish csharp/ScalanceLogs.csproj -c Release
           -f net9.0-windows -r win-x64 --self-contained true
@@ -56,7 +56,7 @@ jobs:
           -o publish/net9
 
       - name: Package zips
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
@@ -64,10 +64,12 @@ jobs:
           Compress-Archive -Path publish/net9/* -DestinationPath "SW-LOG-$tag-net9-win-x64.zip"
 
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: SW-LOG-*.zip
           generate_release_notes: true   # GitHub auto-generates the change list from PRs/commits
           draft: false
-          prerelease: false
+          # Tags containing a hyphen (v1.0.0-alpha, v1.0.0-rc.1, …) are flagged
+          # as pre-release; clean SemVer tags (v1.0.0) become stable releases.
+          prerelease: ${{ contains(github.ref_name, '-') }}
