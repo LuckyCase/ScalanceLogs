@@ -150,8 +150,11 @@ public partial class MainWindow : Window
         _logEntries.Clear();
         int err = 0, warn = 0, down = 0, up = 0;
 
-        foreach (var line in lines.Reverse())
+        // Reverse iteration without LINQ — avoids ambiguity with
+        // MemoryExtensions.Reverse(Span<T>) (void) added in .NET 9.
+        for (int i = lines.Length - 1; i >= 0; i--)
         {
+            var line  = lines[i];
             var entry = SyslogParser.BuildEntry(line);
             if (entry is null) continue;
             _logEntries.Add(entry);

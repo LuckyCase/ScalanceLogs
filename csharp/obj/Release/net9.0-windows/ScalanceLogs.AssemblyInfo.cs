@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("Industrial syslog collector and viewer for Scalance switches")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+187f0a7ba0b6a48b26f593776c0458b2b41d3162")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4e43bb6980ea504b5daca29751c18a83cec92a59")]
 [assembly: System.Reflection.AssemblyProductAttribute("SW-LOG")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SW-LOG Syslog Viewer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
