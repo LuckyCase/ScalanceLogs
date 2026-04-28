@@ -1,7 +1,7 @@
 # SW-LOG — Syslog Viewer
 
 [![Build](https://github.com/LuckyCase/ScalanceLogs/actions/workflows/build.yml/badge.svg)](https://github.com/LuckyCase/ScalanceLogs/actions/workflows/build.yml)
-[![Latest release](https://img.shields.io/github/v/release/LuckyCase/ScalanceLogs?label=download)](https://github.com/LuckyCase/ScalanceLogs/releases/latest)
+[![Latest release](https://img.shields.io/github/v/release/LuckyCase/ScalanceLogs?include_prereleases&label=download)](https://github.com/LuckyCase/ScalanceLogs/releases/latest)
 [![.NET](https://img.shields.io/badge/.NET-6.0%20%7C%209.0-512BD4?logo=dotnet&logoColor=white)](#requirements)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?logo=windows&logoColor=white)](#requirements)
 
