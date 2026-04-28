@@ -36,6 +36,7 @@ public class SyslogCollector
 
         if (AdminHelper.NeedsAdmin(port) && !AdminHelper.IsAdmin())
         {
+            AppLog.Warn($"Port {port} requires admin — collector not started.");
             _ = System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                 System.Windows.MessageBox.Show(
                     $"Port {port} requires administrator rights.\n\nRun as Administrator or change port to 5140 in Settings.",
@@ -50,6 +51,7 @@ public class SyslogCollector
         {
             var ep  = new IPEndPoint(IPAddress.Any, port);
             using var udp = new UdpClient(ep);
+            AppLog.Info($"UDP listener bound to 0.0.0.0:{port}");
             while (!ct.IsCancellationRequested)
             {
                 try
@@ -65,11 +67,13 @@ public class SyslogCollector
                     writer.TryWrite((raw, ip)); // drops on full queue (DropWrite)
                 }
                 catch (OperationCanceledException) { break; }
-                catch { /* malformed packet — ignore */ }
+                catch (Exception ex) { AppLog.Warn("Malformed packet ignored", ex); }
             }
+            AppLog.Info("UDP listener stopped.");
         }
         catch (SocketException ex)
         {
+            AppLog.Error($"Cannot bind UDP port {port}", ex);
             _ = System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                 System.Windows.MessageBox.Show(
                     $"Cannot bind UDP port {port}:\n{ex.Message}",

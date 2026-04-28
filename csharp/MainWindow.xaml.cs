@@ -436,13 +436,27 @@ public partial class MainWindow : Window
     // ── Hyperlink: only open validated https://IP links ──────────
     private void Hyperlink_Navigate(object sender, RequestNavigateEventArgs e)
     {
+        e.Handled = true;
+
         var uri = e.Uri;
-        if (uri.Scheme == Uri.UriSchemeHttps &&
-            System.Net.IPAddress.TryParse(uri.Host, out _))
+        if (uri.Scheme != Uri.UriSchemeHttps ||
+            !System.Net.IPAddress.TryParse(uri.Host, out _))
+            return;
+
+        try
         {
             Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
+            Helpers.AppLog.Info($"Opened browser → {uri.AbsoluteUri}");
         }
-        e.Handled = true;
+        catch (Exception ex)
+        {
+            // .NET 6 self-contained single-file occasionally fails to resolve the
+            // default browser handler. Don't crash the app over a click.
+            Helpers.AppLog.Error($"Process.Start failed for {uri.AbsoluteUri}", ex);
+            MessageBox.Show(
+                $"Could not open browser for {uri.AbsoluteUri}\n\n{ex.Message}",
+                "SW-LOG", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 
     private int GetLineCount()

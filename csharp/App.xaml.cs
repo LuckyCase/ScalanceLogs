@@ -19,9 +19,37 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // Diagnostic log — created/cleared per session, lives next to the exe.
+        AppLog.Initialize();
+        AppLog.Info("App starting…");
+
+        // Global safety net: catch anything we forgot to wrap so the app doesn't
+        // disappear silently. Ctrl+C copies the message in the dialog.
+        DispatcherUnhandledException += (_, args) =>
+        {
+            AppLog.Error("Unhandled UI exception", args.Exception);
+            MessageBox.Show(
+                $"Unhandled error:\n\n{args.Exception.GetType().Name}: {args.Exception.Message}\n\n" +
+                $"Stack trace:\n{args.Exception.StackTrace}\n\n" +
+                $"Full log: {AppLog.Path}",
+                "SW-LOG — Unhandled error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            args.Handled = true;     // keep the app alive
+        };
+
+        // Background-task / non-UI thread exceptions
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+            AppLog.Error("Unhandled background exception", args.ExceptionObject as Exception);
+        TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            AppLog.Error("Unobserved task exception", args.Exception);
+            args.SetObserved();
+        };
+
         _singleInstance = new SingleInstance("ScalanceLogs_Mutex_v1");
         if (!_singleInstance.IsOwner)
         {
+            AppLog.Info("Another instance is already running — exiting.");
             MessageBox.Show("ScalanceLogs already running.", "ScalanceLogs",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             Shutdown();
@@ -31,8 +59,12 @@ public partial class App : Application
         base.OnStartup(e);
 
         Settings = SettingsService.Load();
+        AppLog.Info($"Settings loaded (theme={Settings.Theme}, port={Settings.UdpPort}, " +
+                    $"strict={Settings.StrictMode}, switches={Settings.SwitchNames.Count}).");
+
         ThemeManager.Apply(Settings.Theme);
         LogManager.Initialize();
+        AppLog.Info($"Log directory: {LogManager.LogDir}");
 
         SetupTrayIcon();
         StartCollector();
@@ -41,6 +73,7 @@ public partial class App : Application
         MainWindow = main;
         main.Icon = IconHelper.CreateBrandBitmapSource(32);
         main.Show();
+        AppLog.Info("MainWindow shown — startup complete.");
     }
 
     // ── Collector lifecycle ──────────────────────────────────────
@@ -123,6 +156,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        AppLog.Info("App exiting…");
         try { _collectorCts.Cancel(); } catch { }
         _collectorCts.Dispose();
         _trayIcon?.Dispose();

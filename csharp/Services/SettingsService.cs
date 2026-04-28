@@ -31,19 +31,27 @@ public static class SettingsService
             {
                 var backup = Path + $".broken-{DateTime.Now:yyyyMMddHHmmss}.bak";
                 if (File.Exists(Path)) File.Copy(Path, backup, overwrite: true);
-                System.Diagnostics.Debug.WriteLine(
-                    $"[SettingsService] settings.json unreadable ({ex.Message}); backed up to {backup}");
+                AppLog.Warn($"settings.json unreadable, backed up to {backup}", ex);
             }
-            catch { }
+            catch (Exception ex2) { AppLog.Error("Could not back up corrupt settings.json", ex2); }
         }
         return new AppSettings();
     }
 
     public static void Save(AppSettings s)
     {
-        Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path)!);
-        File.WriteAllText(Path, JsonSerializer.Serialize(s, Opts));
-        // Patterns may have changed → blow the regex cache so updates take effect.
-        SafeRegex.ClearCache();
+        try
+        {
+            Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path)!);
+            File.WriteAllText(Path, JsonSerializer.Serialize(s, Opts));
+            // Patterns may have changed → blow the regex cache so updates take effect.
+            SafeRegex.ClearCache();
+            AppLog.Info("Settings saved.");
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error("Failed to save settings", ex);
+            throw;
+        }
     }
 }

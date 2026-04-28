@@ -45,7 +45,7 @@ public static class TitleBarHelper
         catch (Exception ex)
         {
             // Non-fatal — older OS (Win10 ignores), sandbox, etc.
-            System.Diagnostics.Debug.WriteLine($"[TitleBarHelper] {ex.Message}");
+            AppLog.Warn("DWM title-bar attribute set failed (likely Windows 10 — fine)", ex);
         }
     }
 

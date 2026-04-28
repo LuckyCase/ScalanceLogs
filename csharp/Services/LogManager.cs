@@ -25,7 +25,10 @@ public static class LogManager
     {
         lock (Lock)
         {
-            _logDir = PathValidator.ResolveSafe(App.Settings.LogPath);
+            var requested = App.Settings.LogPath;
+            _logDir = PathValidator.ResolveSafe(requested);
+            if (_logDir != requested)
+                AppLog.Warn($"LogPath '{requested}' rejected by validator → using '{_logDir}'");
             Directory.CreateDirectory(_logDir);
             _currentDate = Today();
         }

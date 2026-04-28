@@ -29,7 +29,7 @@ public static class AutostartHelper
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[AutostartHelper] {ex.Message}");
+            AppLog.Warn("AutostartHelper.Set failed", ex);
         }
     }
 
