@@ -3,13 +3,18 @@ name: Build
 on:
   push:
     branches: [ master ]
-    tags:     [ 'v*' ]
+    tags:     [ '*' ]       # any tag → publish a release (v1.2.3, Release_V0.01, etc.)
   pull_request:
     branches: [ master ]
   workflow_dispatch:        # lets you trigger the workflow manually from the Actions tab
 
 permissions:
   contents: write           # required so the release step can create a GitHub Release
+
+# Silences the deprecation warning until actions/checkout & actions/setup-dotnet
+# bump to Node 24 by default. Safe to remove once they do.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
