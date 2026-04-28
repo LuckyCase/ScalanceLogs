@@ -1,5 +1,10 @@
 # SW-LOG — Syslog Viewer
 
+[![Build](https://github.com/LuckyCase/ScalanceLogs/actions/workflows/build.yml/badge.svg)](https://github.com/LuckyCase/ScalanceLogs/actions/workflows/build.yml)
+[![Latest release](https://img.shields.io/github/v/release/LuckyCase/ScalanceLogs?label=download)](https://github.com/LuckyCase/ScalanceLogs/releases/latest)
+[![.NET](https://img.shields.io/badge/.NET-6.0%20%7C%209.0-512BD4?logo=dotnet&logoColor=white)](#requirements)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?logo=windows&logoColor=white)](#requirements)
+
 WPF desktop application for collecting and viewing UDP syslog from Siemens Scalance XC-200 industrial switches (and any RFC 5424 / RFC 3164 source).
 
 ```
@@ -7,6 +12,15 @@ Scalance switches  ──UDP──►  SW-LOG  ──►  rotating log files
                                 │
                           tray icon + WPF UI (live + history)
 ```
+
+## Download
+
+Get the latest self-contained build from the [**Releases page**](https://github.com/LuckyCase/ScalanceLogs/releases/latest) — no .NET install needed:
+
+| File | When to pick |
+|---|---|
+| `SW-LOG-vX.Y.Z-net9-win-x64.zip` | Recommended for new installs |
+| `SW-LOG-vX.Y.Z-net6-win-x64.zip` | If your environment is locked to .NET 6 |
 
 ---
 
