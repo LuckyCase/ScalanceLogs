@@ -1,9 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <!-- Multi-target: build the same source against both runtimes.
+         Pick whichever fits your environment (CI publishes both). -->
+    <TargetFrameworks>net6.0-windows;net9.0-windows</TargetFrameworks>
+    <!-- Use newest C# (collection expressions, primary ctors, …) on both TFMs.
+         These are compiler features and don't require a newer runtime. -->
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- net6 is EOL but we keep it for compatibility — silence the warning. -->
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>ScalanceLogs</AssemblyName>

@@ -6,8 +6,16 @@ namespace ScalanceLogs.Services;
 
 public static class SyslogParser
 {
-    // Parses RFC-3164 raw UDP datagram
-    private static readonly Regex SyslogRe = new(
+    // RFC 5424 (modern Scalance, Cisco IOS-XE, …):
+    //   <PRI>VERSION TIMESTAMP HOSTNAME APP-NAME PROCID MSGID [SD] MSG
+    //   <134>1 2026-04-27T10:14:24+00:00 PN-SW01 6GK5216-4BS00-2AC2 69 - [meta …] Link down on P0.2.
+    private static readonly Regex Rfc5424Re = new(
+        @"^<(\d+)>\d+\s+\S+\s+(\S+)\s+\S+\s+\S+\s+\S+\s+(.*)$",
+        RegexOptions.Compiled);
+
+    // RFC 3164 (legacy BSD syslog):
+    //   <PRI>Mmm DD HH:MM:SS HOSTNAME MSG
+    private static readonly Regex Rfc3164Re = new(
         @"^<(\d+)>(\w{3}\s+\d+\s+[\d:]+)\s+([\w.\-]+)\s+(.*)$",
         RegexOptions.Compiled);
 
@@ -26,16 +34,53 @@ public static class SyslogParser
         ["EMERG", "ALERT", "CRIT", "ERROR", "WARN", "NOTICE", "INFO", "DEBUG"];
 
     // ── Parse raw syslog datagram ────────────────────────────────
+    /// <summary>
+    /// Returns (severity, hostname, payload).  Payload is the human-readable MSG
+    /// with header and structured-data stripped — used for event-filter matching.
+    /// The full raw packet is preserved separately by the caller and written to
+    /// the file as-is (so the user can see it via the row-expand view).
+    /// </summary>
     public static (int severity, string hostname, string message)
         ParseRaw(string raw, string srcIp)
     {
-        var m = SyslogRe.Match(raw);
-        if (m.Success)
+        // RFC 5424 first (modern devices)
+        var m5 = Rfc5424Re.Match(raw);
+        if (m5.Success)
         {
-            var pri = int.Parse(m.Groups[1].Value);
-            return (pri & 0x07, m.Groups[3].Value, m.Groups[4].Value);
+            var pri  = int.Parse(m5.Groups[1].Value);
+            var host = m5.Groups[2].Value;
+            var msg  = StripStructuredData(m5.Groups[3].Value);
+            return (pri & 0x07, host, msg);
         }
+
+        // RFC 3164 fallback
+        var m3 = Rfc3164Re.Match(raw);
+        if (m3.Success)
+        {
+            var pri = int.Parse(m3.Groups[1].Value);
+            return (pri & 0x07, m3.Groups[3].Value, m3.Groups[4].Value);
+        }
+
+        // Unknown format — keep severity unknown (default to INFO=6) and pass raw through
         return (6, srcIp, raw);
+    }
+
+    /// <summary>
+    /// Removes RFC-5424 STRUCTURED-DATA: either nil ("-") or one or more
+    /// "[ID key=value …]" blocks, returning just the human MSG.
+    /// </summary>
+    private static string StripStructuredData(string s)
+    {
+        s = s.TrimStart();
+        if (s == "-")           return "";
+        if (s.StartsWith("- ")) return s[2..].TrimStart();
+        while (s.StartsWith('['))
+        {
+            var end = s.IndexOf(']');
+            if (end < 0) break;
+            s = s[(end + 1)..].TrimStart();
+        }
+        return s;
     }
 
     public static string SeverityLabel(int code) =>

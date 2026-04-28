@@ -96,23 +96,26 @@ public class SyslogCollector
 
     private static void Handle(string raw, string srcIp)
     {
-        var (severity, _, message) = SyslogParser.ParseRaw(raw, srcIp);
+        // payload = clean human MSG (header + [SD] stripped) — used for event filters & UI.
+        // raw     = full original packet — written to the file so the operator can inspect
+        //           it via the expand view (timestamp, app-name, sysUpTime, etc.)
+        var (severity, _, payload) = SyslogParser.ParseRaw(raw, srcIp);
         var sevLabel = SyslogParser.SeverityLabel(severity);
 
         var name  = App.Settings.SwitchNames.FirstOrDefault(s => s.Ip == srcIp)?.Name ?? srcIp;
         var label = (name != srcIp) ? $"{srcIp} ({name})" : srcIp;
         var today = DateTime.Today.ToString("yyyy-MM-dd");
         var ts    = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-        var line  = $"{ts} [{sevLabel,-6}] {label} | {message}";
+        var line  = $"{ts} [{sevLabel,-6}] {label} | {raw}";
 
         var safeIp   = srcIp.Replace('.', '_');
         var fileBase = (name != srcIp) ? $"{safeIp}_{name}" : safeIp;
         LogManager.Write($"host_{fileBase}_{today}", $"{fileBase}_{today}.log", line);
 
-        var msg = new RawSyslogMessage(ts, srcIp, label, severity, message, line);
+        var msg = new RawSyslogMessage(ts, srcIp, label, severity, payload, line);
         EventHub.Publish(msg);
 
-        if (IsEvent(message))
+        if (IsEvent(payload))
             LogManager.Write($"events_{today}", $"events_{today}.log", line);
     }
 

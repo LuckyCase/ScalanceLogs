@@ -51,7 +51,11 @@
       "PowerShell(& \"C:\\\\Program Files\\\\dotnet\\\\dotnet.exe\" publish C:\\\\Projects\\\\ScalanceLogs\\\\csharp\\\\ScalanceLogs.csproj -c Release -r win-x64 --self-contained false 2>&1)",
       "PowerShell(Get-ChildItem \"C:\\\\Projects\\\\ScalanceLogs\\\\csharp\\\\bin\\\\Release\\\\net9.0-windows\\\\win-x64\\\\publish\\\\\" | Select-Object Name, @{N=\"Size KB\";E={[math]::Round\\($_.Length/1KB,1\\)}} | Sort-Object \"Size KB\" -Descending)",
       "Bash(dotnet publish *)",
-      "WebFetch(domain:api.anthropic.com)"
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(git fetch *)",
+      "Bash(git push *)",
+      "Bash(git branch *)",
+      "Bash(git rm *)"
     ]
   }
 }
