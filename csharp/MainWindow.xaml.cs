@@ -433,31 +433,32 @@ public partial class MainWindow : Window
         }
     }
 
-    // ── Hyperlink: only open validated https://IP links ──────────
+    // ── Hyperlink: open https://<IP> for the clicked log row ──────────
+    // We pull IpPart straight from the row's DataContext (LogEntry) instead of
+    // relying on the Uri WPF builds via StringFormat — that path produced
+    // relative Uris on .NET 6 and silently failed.
     private void Hyperlink_Navigate(object sender, RequestNavigateEventArgs e)
     {
         e.Handled = true;
 
-        var uri = e.Uri;
-        // WPF can hand us a relative Uri (e.g. on the first render before the
-        // binding resolves). Reading .Scheme on a relative Uri throws.
-        if (uri is null || !uri.IsAbsoluteUri) return;
-        if (uri.Scheme != Uri.UriSchemeHttps ||
-            !System.Net.IPAddress.TryParse(uri.Host, out _))
+        string? ip = null;
+        if (sender is FrameworkContentElement fce && fce.DataContext is LogEntry entry)
+            ip = entry.IpPart;
+
+        if (string.IsNullOrEmpty(ip) || !System.Net.IPAddress.TryParse(ip, out _))
             return;
 
+        var url = $"https://{ip}";
         try
         {
-            Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
-            Helpers.AppLog.Info($"Opened browser → {uri.AbsoluteUri}");
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            Helpers.AppLog.Info($"Opened browser → {url}");
         }
         catch (Exception ex)
         {
-            // .NET 6 self-contained single-file occasionally fails to resolve the
-            // default browser handler. Don't crash the app over a click.
-            Helpers.AppLog.Error($"Process.Start failed for {uri.AbsoluteUri}", ex);
+            Helpers.AppLog.Error($"Process.Start failed for {url}", ex);
             MessageBox.Show(
-                $"Could not open browser for {uri.AbsoluteUri}\n\n{ex.Message}",
+                $"Could not open browser for {url}\n\n{ex.Message}",
                 "SW-LOG", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }

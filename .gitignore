@@ -10,6 +10,7 @@ color_preview/
 # Build output (.NET)
 csharp/bin/
 csharp/obj/
+csharp/publish*/
 
 # Python
 __pycache__/
