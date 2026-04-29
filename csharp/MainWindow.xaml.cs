@@ -439,6 +439,9 @@ public partial class MainWindow : Window
         e.Handled = true;
 
         var uri = e.Uri;
+        // WPF can hand us a relative Uri (e.g. on the first render before the
+        // binding resolves). Reading .Scheme on a relative Uri throws.
+        if (uri is null || !uri.IsAbsoluteUri) return;
         if (uri.Scheme != Uri.UriSchemeHttps ||
             !System.Net.IPAddress.TryParse(uri.Host, out _))
             return;
